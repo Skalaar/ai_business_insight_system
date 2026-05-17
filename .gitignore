@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+.venv/
+venv/
+
+# VS Code
+.vscode/
+
+# Data files
+data/raw/
+data/processed/
+
+# Outputs
+outputs/charts/
+outputs/tables/
+outputs/screenshots/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Streamlit
+.streamlit/secrets.toml
