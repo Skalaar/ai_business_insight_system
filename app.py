@@ -2,6 +2,7 @@ from pathlib import Path
 
 import plotly.express as px
 import streamlit as st
+import pandas as pd
 
 from src.data_loader import (
     load_review_data,
@@ -207,7 +208,7 @@ if filtered_review_data is not None:
     )
 
 
-tab_intro, tab_data, tab_sales, tab_rfm, tab_reviews, tab_ml, tab_recommendations, tab_export = st.tabs(
+tab_intro, tab_data, tab_sales, tab_rfm, tab_reviews, tab_ml, tab_recommendations, tab_summary, tab_export = st.tabs(
     [
         "Opis projektu",
         "Dane",
@@ -216,6 +217,7 @@ tab_intro, tab_data, tab_sales, tab_rfm, tab_reviews, tab_ml, tab_recommendation
         "Analiza opinii",
         "Model AI/ML",
         "Rekomendacje",
+        "Podsumowanie badania",
         "Eksport wyników",
     ]
 )
@@ -840,6 +842,169 @@ with tab_recommendations:
             wskazuje obszary wymagające uwagi.
             """
         )
+
+
+with tab_summary:
+    st.header("Podsumowanie badania")
+
+    st.write(
+        """
+        Ta sekcja prezentuje syntetyczne podsumowanie danych, metod oraz wyników
+        uzyskanych w ramach działania prototypu. Informacje z tej części mogą
+        zostać wykorzystane przy opisie eksperymentu badawczego w pracy magisterskiej.
+        """
+    )
+
+    if filtered_sales_data is None or filtered_sales_data.empty:
+        st.warning("Brak danych sprzedażowych do podsumowania.")
+    else:
+        sales_kpis_summary = calculate_sales_kpis(filtered_sales_data)
+
+        min_sales_date = filtered_sales_data["InvoiceDate"].min().date()
+        max_sales_date = filtered_sales_data["InvoiceDate"].max().date()
+
+        st.subheader("Zakres danych sprzedażowych")
+
+        col1, col2, col3, col4 = st.columns(4)
+
+        col1.metric("Rekordy sprzedażowe", len(filtered_sales_data))
+        col2.metric("Liczba klientów", sales_kpis_summary["total_customers"])
+        col3.metric("Liczba produktów", sales_kpis_summary["total_products"])
+        col4.metric("Liczba transakcji", sales_kpis_summary["total_transactions"])
+
+        col5, col6, col7 = st.columns(3)
+
+        col5.metric("Łączny przychód", f"{sales_kpis_summary['total_revenue']:,.2f}")
+        col6.metric("Śr. wartość zamówienia", f"{sales_kpis_summary['average_order_value']:,.2f}")
+        col7.metric("Zakres dat", f"{min_sales_date} — {max_sales_date}")
+
+    st.divider()
+
+    if filtered_review_data is None or filtered_review_data.empty:
+        st.warning("Brak danych tekstowych do podsumowania.")
+    else:
+        review_kpis_summary = review_kpis(filtered_review_data)
+
+        st.subheader("Zakres danych tekstowych")
+
+        col1, col2, col3, col4 = st.columns(4)
+
+        col1.metric("Liczba opinii", review_kpis_summary["total_reviews"])
+        col2.metric("Średnia ocena", f"{review_kpis_summary['average_rating']:.2f}")
+        col3.metric("Śr. długość opinii", f"{review_kpis_summary['average_review_length']:.0f} znaków")
+        col4.metric("Produkty z opiniami", review_kpis_summary["unique_products"])
+
+    st.divider()
+
+    st.subheader("Zastosowane metody analityczne")
+
+    methods_data = [
+        {
+            "Obszar": "Dane sprzedażowe",
+            "Metoda": "Czyszczenie danych, agregacja KPI, analiza sprzedaży w czasie, ranking produktów i krajów",
+            "Cel": "Identyfikacja wyników sprzedażowych oraz struktury przychodów",
+        },
+        {
+            "Obszar": "Klienci",
+            "Metoda": "Segmentacja RFM",
+            "Cel": "Podział klientów według aktualności zakupów, częstotliwości i wartości zakupów",
+        },
+        {
+            "Obszar": "Dane tekstowe",
+            "Metoda": "Czyszczenie tekstu, analiza ocen, rozkład sentymentu, najczęstsze słowa",
+            "Cel": "Identyfikacja nastrojów klientów i cech opinii",
+        },
+        {
+            "Obszar": "AI/ML",
+            "Metoda": "TF-IDF + Logistic Regression",
+            "Cel": "Klasyfikacja sentymentu opinii klientów na podstawie treści tekstowej",
+        },
+        {
+            "Obszar": "Wsparcie decyzji",
+            "Metoda": "Regułowy moduł rekomendacyjny",
+            "Cel": "Generowanie rekomendacji biznesowych na podstawie danych sprzedażowych i tekstowych",
+        },
+    ]
+
+    # st.dataframe(methods_data, width="stretch")
+    st.dataframe(pd.DataFrame(methods_data), width="stretch")
+
+    st.divider()
+
+    st.subheader("Wyniki modelu AI/ML")
+
+    if filtered_review_data is None or filtered_review_data.empty:
+        st.warning("Brak danych do oceny modelu AI/ML.")
+    else:
+        try:
+            summary_model_results = train_tfidf_logistic_regression_model(filtered_review_data)
+
+            col1, col2, col3 = st.columns(3)
+
+            col1.metric("Zbiór treningowy", summary_model_results["train_size"])
+            col2.metric("Zbiór testowy", summary_model_results["test_size"])
+            col3.metric("Dokładność modelu", f"{summary_model_results['accuracy']:.2%}")
+
+            st.write(
+                """
+                Dokładność modelu oznacza odsetek opinii ze zbioru testowego,
+                dla których przewidywany sentyment był zgodny z etykietą
+                wyznaczoną na podstawie oceny gwiazdkowej.
+                """
+            )
+
+        except Exception as error:
+            st.warning(f"Nie udało się obliczyć podsumowania modelu AI/ML: {error}")
+
+    st.divider()
+
+    st.subheader("Podsumowanie rekomendacji")
+
+    if filtered_sales_data is None or filtered_sales_data.empty:
+        st.warning("Brak danych sprzedażowych do wygenerowania podsumowania rekomendacji.")
+    else:
+        summary_kpis = calculate_sales_kpis(filtered_sales_data)
+        summary_top_products = top_products(filtered_sales_data, limit=10)
+        summary_country_data = sales_by_country(filtered_sales_data)
+        summary_rfm_data = rfm_analysis(filtered_sales_data)
+
+        summary_sales_recommendations = generate_sales_recommendations(
+            kpis=summary_kpis,
+            top_products_data=summary_top_products,
+            country_data=summary_country_data,
+            rfm_data=summary_rfm_data,
+        )
+
+        col1, col2 = st.columns(2)
+
+        col1.metric("Rekomendacje sprzedażowe", len(summary_sales_recommendations))
+
+        if filtered_review_data is not None and not filtered_review_data.empty:
+            summary_product_reviews = product_review_summary(filtered_review_data)
+            summary_combined_recommendations = generate_combined_product_recommendations(
+                top_products_data=summary_top_products,
+                product_reviews_data=summary_product_reviews,
+            )
+
+            col2.metric("Rekomendacje łączone", len(summary_combined_recommendations))
+        else:
+            col2.metric("Rekomendacje łączone", 0)
+
+    st.divider()
+
+    st.subheader("Interpretacja ogólna")
+
+    st.write(
+        """
+        Uzyskane wyniki pokazują, że połączenie analizy danych sprzedażowych,
+        analizy opinii klientów oraz metod uczenia maszynowego może wspierać
+        procesy decyzyjne przedsiębiorstwa. Moduł sprzedażowy umożliwia ocenę
+        wyników produktów, klientów i rynków, natomiast moduł tekstowy pozwala
+        uwzględnić głos klienta. Warstwa rekomendacyjna integruje te informacje
+        i wskazuje obszary wymagające działań biznesowych.
+        """
+    )
+
 
 with tab_export:
     st.header("Eksport wyników analizy")
