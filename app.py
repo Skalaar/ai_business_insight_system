@@ -3,7 +3,7 @@ from pathlib import Path
 import plotly.express as px
 import streamlit as st
 
-from src.data_loader import load_sales_data
+from src.data_loader import load_sales_data, load_uploaded_sales_data
 from src.preprocessing import clean_sales_data
 from src.sales_analysis import (
     calculate_sales_kpis,
@@ -24,14 +24,51 @@ st.title("AI Business Insight System")
 st.subheader("Prototyp systemu wspierającego decyzje przedsiębiorstwa")
 
 
-DATA_PATH = Path("data/sample/sample_sales.csv")
+SAMPLE_DATA_PATH = Path("data/sample/sample_sales.csv")
 
 
 @st.cache_data
-def get_sales_data():
-    raw_data = load_sales_data(DATA_PATH)
+def get_sample_sales_data():
+    raw_data = load_sales_data(SAMPLE_DATA_PATH)
     cleaned_data = clean_sales_data(raw_data)
     return raw_data, cleaned_data
+
+
+def process_uploaded_sales_file(uploaded_file):
+    raw_data = load_uploaded_sales_data(uploaded_file)
+    cleaned_data = clean_sales_data(raw_data)
+    return raw_data, cleaned_data
+
+
+st.sidebar.header("Źródło danych")
+
+uploaded_file = st.sidebar.file_uploader(
+    "Wgraj plik sprzedażowy CSV/XLSX",
+    type=["csv", "xlsx", "xls"],
+)
+
+use_sample_data = st.sidebar.checkbox(
+    "Użyj danych przykładowych",
+    value=True,
+)
+
+try:
+    if uploaded_file is not None:
+        raw_sales_data, cleaned_sales_data = process_uploaded_sales_file(uploaded_file)
+        data_source_description = f"Plik użytkownika: {uploaded_file.name}"
+    elif use_sample_data:
+        raw_sales_data, cleaned_sales_data = get_sample_sales_data()
+        data_source_description = "Dane przykładowe: data/sample/sample_sales.csv"
+    else:
+        raw_sales_data = None
+        cleaned_sales_data = None
+        data_source_description = "Nie wybrano źródła danych"
+
+except Exception as error:
+    raw_sales_data = None
+    cleaned_sales_data = None
+    data_source_description = "Błąd wczytywania danych"
+    st.sidebar.error(f"Błąd danych: {error}")
 
 
 tab_intro, tab_data, tab_sales = st.tabs(
@@ -64,12 +101,29 @@ with tab_intro:
         """
     )
 
+    st.subheader("Aktualne źródło danych")
+    st.write(data_source_description)
+
+    st.subheader("Wymagany format danych sprzedażowych")
+    st.write(
+        """
+        Plik sprzedażowy powinien zawierać następujące kolumny:
+        """
+    )
+
+    st.code(
+        "InvoiceNo, StockCode, Description, Quantity, InvoiceDate, UnitPrice, CustomerID, Country",
+        language="text",
+    )
+
 
 with tab_data:
     st.header("Dane sprzedażowe")
 
-    try:
-        raw_sales_data, cleaned_sales_data = get_sales_data()
+    if raw_sales_data is None or cleaned_sales_data is None:
+        st.warning("Nie wczytano danych. Wgraj plik w panelu bocznym lub zaznacz użycie danych przykładowych.")
+    else:
+        st.success(f"Źródło danych: {data_source_description}")
 
         st.subheader("Podgląd danych surowych")
         st.dataframe(raw_sales_data, width="stretch")
@@ -82,16 +136,13 @@ with tab_data:
         col2.metric("Liczba rekordów po czyszczeniu", len(cleaned_sales_data))
         col3.metric("Liczba kolumn", cleaned_sales_data.shape[1])
 
-    except Exception as error:
-        st.error(f"Wystąpił błąd podczas wczytywania danych: {error}")
-
 
 with tab_sales:
     st.header("Analiza sprzedaży")
 
-    try:
-        _, cleaned_sales_data = get_sales_data()
-
+    if cleaned_sales_data is None:
+        st.warning("Brak danych do analizy. Wgraj plik sprzedażowy lub użyj danych przykładowych.")
+    else:
         kpis = calculate_sales_kpis(cleaned_sales_data)
 
         col1, col2, col3, col4, col5 = st.columns(5)
@@ -148,6 +199,3 @@ with tab_sales:
 
         st.plotly_chart(fig_country, width="stretch")
         st.dataframe(country_data, width="stretch")
-
-    except Exception as error:
-        st.error(f"Wystąpił błąd podczas analizy sprzedaży: {error}")
