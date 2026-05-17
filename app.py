@@ -39,6 +39,11 @@ def process_uploaded_sales_file(uploaded_file):
     cleaned_data = clean_sales_data(raw_data)
     return raw_data, cleaned_data
 
+def convert_dataframe_to_csv(dataframe):
+    """
+    Konwertuje DataFrame do formatu CSV gotowego do pobrania w Streamlit.
+    """
+    return dataframe.to_csv(index=False).encode("utf-8-sig")
 
 st.sidebar.header("Źródło danych")
 
@@ -71,12 +76,13 @@ except Exception as error:
     st.sidebar.error(f"Błąd danych: {error}")
 
 
-tab_intro, tab_data, tab_sales, tab_rfm = st.tabs(
+tab_intro, tab_data, tab_sales, tab_rfm, tab_export = st.tabs(
     [
         "Opis projektu",
         "Dane",
         "Analiza sprzedaży",
         "Segmentacja RFM",
+        "Eksport wyników",
     ]
 )
 
@@ -301,3 +307,81 @@ with tab_rfm:
                 „Nowi lub okazjonalni klienci” mogą być adresatami kampanii aktywizujących.
                 """
             )        
+
+with tab_export:
+    st.header("Eksport wyników analizy")
+
+    if cleaned_sales_data is None:
+        st.warning("Brak danych do eksportu. Wgraj plik sprzedażowy lub użyj danych przykładowych.")
+    else:
+        st.write(
+            """
+            Ta sekcja umożliwia pobranie wyników analizy w formacie CSV.
+            Wyeksportowane dane mogą zostać wykorzystane do dalszego raportowania,
+            dokumentacji badania lub dodatkowej analizy poza aplikacją.
+            """
+        )
+
+        monthly_data = monthly_sales(cleaned_sales_data)
+        top_products_data = top_products(cleaned_sales_data, limit=10)
+        country_data = sales_by_country(cleaned_sales_data)
+        rfm_data = rfm_analysis(cleaned_sales_data)
+
+        st.subheader("Dane po czyszczeniu")
+
+        st.download_button(
+            label="Pobierz dane po czyszczeniu CSV",
+            data=convert_dataframe_to_csv(cleaned_sales_data),
+            file_name="cleaned_sales_data.csv",
+            mime="text/csv",
+        )
+
+        st.subheader("Wyniki analizy sprzedaży")
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.download_button(
+                label="Pobierz sprzedaż miesięczną",
+                data=convert_dataframe_to_csv(monthly_data),
+                file_name="monthly_sales.csv",
+                mime="text/csv",
+            )
+
+        with col2:
+            st.download_button(
+                label="Pobierz TOP produkty",
+                data=convert_dataframe_to_csv(top_products_data),
+                file_name="top_products.csv",
+                mime="text/csv",
+            )
+
+        with col3:
+            st.download_button(
+                label="Pobierz sprzedaż według kraju",
+                data=convert_dataframe_to_csv(country_data),
+                file_name="sales_by_country.csv",
+                mime="text/csv",
+            )
+
+        st.subheader("Wyniki segmentacji klientów")
+
+        if rfm_data.empty:
+            st.warning("Brak danych RFM do eksportu.")
+        else:
+            st.download_button(
+                label="Pobierz segmentację RFM",
+                data=convert_dataframe_to_csv(rfm_data),
+                file_name="rfm_segmentation.csv",
+                mime="text/csv",
+            )
+
+        st.divider()
+
+        st.info(
+            """
+            Funkcja eksportu wyników zwiększa praktyczną użyteczność prototypu,
+            ponieważ pozwala przenieść rezultaty analizy do arkusza kalkulacyjnego
+            lub wykorzystać je jako załączniki do raportu biznesowego.
+            """
+        )            
