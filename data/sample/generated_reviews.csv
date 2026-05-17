@@ -1,0 +1,601 @@
+﻿ReviewID,ProductID,ProductName,Rating,ReviewDate,ReviewText
+1,85099C,JUMBO BAG BAROQUE BLACK WHITE,5,2011-11-16,I expected better quality for this price.
+2,84406B,CREAM CUPID HEARTS COAT HANGER,3,2011-04-05,The product did not meet my expectations.
+3,85099C,JUMBO BAG BAROQUE BLACK WHITE,2,2011-05-12,"Average product, acceptable but nothing special."
+4,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-05-18,"Good quality, but the price is slightly higher than I would like."
+5,21730,GLASS STAR FROSTED T-LIGHT HOLDER,4,2011-03-07,"Delivery was fast, but the product quality was poor. I used it for a few days."
+6,22632,HAND WARMER RED POLKA DOT,5,2011-05-15,"Good quality, but the price is slightly higher than I would like. I checked similar products before buying."
+7,21258,VICTORIAN SEWING BOX LARGE,3,2011-09-21,Delivery was normal and the product is acceptable. The description was mostly accurate.
+8,22632,HAND WARMER RED POLKA DOT,3,2011-06-26,"The product works, although the design is not very impressive."
+9,22752,SET 7 BABUSHKA NESTING BOXES,4,2011-04-16,"I am satisfied with this purchase, although delivery could be faster. For this price, the result is acceptable."
+10,22386,JUMBO BAG PINK POLKADOT,5,2011-09-03,"Some parts are good, but other details feel average."
+11,22386,JUMBO BAG PINK POLKADOT,5,2011-08-20,"Very useful product, solid and nicely made. I checked similar products before buying."
+12,22752,SET 7 BABUSHKA NESTING BOXES,5,2011-02-11,"The product quality is good, but the packaging was average. The description was mostly accurate."
+13,85123A,WHITE HANGING HEART T-LIGHT HOLDER,4,2011-11-18,"It does the job, but nothing more."
+14,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,1,2011-10-23,"The item is usable, but I am not fully convinced."
+15,22961,JAM MAKING SET PRINTED,4,2011-05-26,"Very useful product, solid and nicely made."
+16,22961,JAM MAKING SET PRINTED,1,2011-09-13,Poor quality. The product broke after first use. The first impression was different than expected.
+17,85099C,JUMBO BAG BAROQUE BLACK WHITE,4,2011-11-17,I would buy this product again because it is reliable and practical.
+18,22752,SET 7 BABUSHKA NESTING BOXES,3,2011-05-17,"Average product, acceptable but nothing special."
+19,84029E,RED WOOLLY HOTTIE WHITE HEART,1,2011-01-28,"Delivery was fast, but the product quality was poor."
+20,22386,JUMBO BAG PINK POLKADOT,3,2011-07-07,"The product works, although the design is not very impressive. The product has both advantages and disadvantages."
+21,84029E,RED WOOLLY HOTTIE WHITE HEART,1,2011-07-23,"Neutral experience. The item is usable but not impressive. For this price, the result is acceptable."
+22,85123A,WHITE HANGING HEART T-LIGHT HOLDER,3,2011-03-13,I am disappointed with this purchase.
+23,22961,JAM MAKING SET PRINTED,3,2011-07-07,"Quality is acceptable, but there are better alternatives."
+24,85123A,WHITE HANGING HEART T-LIGHT HOLDER,3,2011-08-30,Great value for money and the product works well.
+25,22086,PAPER CHAIN KIT 50'S CHRISTMAS,1,2011-03-25,"The design is nice, but the item does not work well. This may depend on customer expectations."
+26,85099C,JUMBO BAG BAROQUE BLACK WHITE,4,2011-04-12,"Average product, acceptable but nothing special."
+27,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,3,2011-02-12,"It looked good at first, but after using it I noticed several problems. For this price, the result is acceptable."
+28,22961,JAM MAKING SET PRINTED,4,2011-06-15,"Beautiful item, exactly as described. I would recommend it."
+29,22114,HOT WATER BOTTLE TEA AND SYMPATHY,1,2011-06-06,The product arrived in poor condition. I used it for a few days.
+30,21730,GLASS STAR FROSTED T-LIGHT HOLDER,4,2011-08-09,Useful and practical item. It works better than I expected. The product has both advantages and disadvantages.
+31,22114,HOT WATER BOTTLE TEA AND SYMPATHY,2,2011-01-12,"The item looks nice, but the quality is disappointing."
+32,21730,GLASS STAR FROSTED T-LIGHT HOLDER,3,2011-01-21,"Average product, acceptable but nothing special."
+33,21258,VICTORIAN SEWING BOX LARGE,2,2011-06-20,The material feels cheap and unreliable.
+34,22752,SET 7 BABUSHKA NESTING BOXES,1,2011-05-29,The product is not worth the money. The description was mostly accurate.
+35,85099C,JUMBO BAG BAROQUE BLACK WHITE,4,2011-04-21,The product arrived in poor condition.
+36,22961,JAM MAKING SET PRINTED,5,2011-09-06,Useful and practical item. It works better than I expected. The description was mostly accurate.
+37,22752,SET 7 BABUSHKA NESTING BOXES,5,2011-07-31,"The product quality is good, but the packaging was average."
+38,21730,GLASS STAR FROSTED T-LIGHT HOLDER,2,2011-06-04,Delivery was normal and the product is acceptable. I checked similar products before buying.
+39,85123A,WHITE HANGING HEART T-LIGHT HOLDER,4,2011-05-05,The material feels cheap and unreliable.
+40,21730,GLASS STAR FROSTED T-LIGHT HOLDER,4,2011-05-10,I would buy this product again because it is reliable and practical. I checked similar products before buying.
+41,22386,JUMBO BAG PINK POLKADOT,5,2011-06-12,I would buy this product again because it is reliable and practical. The description was mostly accurate.
+42,22633,HAND WARMER UNION JACK,5,2011-04-09,"Very useful product, solid and nicely made. The description was mostly accurate."
+43,22632,HAND WARMER RED POLKA DOT,4,2010-12-09,"Very useful product, solid and nicely made. For this price, the result is acceptable."
+44,22961,JAM MAKING SET PRINTED,5,2011-02-02,"The product quality is good, but the packaging was average. The first impression was different than expected."
+45,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-01-11,"I like the product, but the material could feel a little stronger. It is hard to compare with other items."
+46,22633,HAND WARMER UNION JACK,4,2011-03-30,"Excellent product, very good quality and beautiful design."
+47,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,2,2011-03-02,Bad quality and poor durability. It is hard to compare with other items.
+48,22086,PAPER CHAIN KIT 50'S CHRISTMAS,5,2011-09-01,"The product quality is good, but the packaging was average."
+49,85123A,WHITE HANGING HEART T-LIGHT HOLDER,4,2011-05-27,"The product quality is good, but the packaging was average."
+50,22114,HOT WATER BOTTLE TEA AND SYMPATHY,4,2011-06-08,"The item is usable, but I would not buy it again. For this price, the result is acceptable."
+51,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,3,2011-03-06,"It works as described, but the quality could be better."
+52,84406B,CREAM CUPID HEARTS COAT HANGER,1,2011-08-28,"Delivery was fast, but the product quality was poor. My opinion may change after longer use."
+53,22752,SET 7 BABUSHKA NESTING BOXES,5,2011-06-16,"Beautiful item, exactly as described. I would recommend it. It is hard to compare with other items."
+54,85123A,WHITE HANGING HEART T-LIGHT HOLDER,2,2011-03-14,Delivery was normal and the product is acceptable.
+55,85123A,WHITE HANGING HEART T-LIGHT HOLDER,4,2010-12-26,It is a standard item with no major advantages or disadvantages.
+56,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-08-01,"Excellent product, very good quality and beautiful design. The product has both advantages and disadvantages."
+57,22114,HOT WATER BOTTLE TEA AND SYMPATHY,2,2011-01-20,"The design is nice, but the item does not work well."
+58,22633,HAND WARMER UNION JACK,4,2011-10-19,"Good quality, but the price is slightly higher than I would like. The first impression was different than expected."
+59,21258,VICTORIAN SEWING BOX LARGE,5,2011-05-31,"Very useful product, solid and nicely made."
+60,22086,PAPER CHAIN KIT 50'S CHRISTMAS,5,2011-04-12,"The product is okay, but I expected a little more. It is hard to compare with other items."
+61,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-08-26,"The product works, although the design is not very impressive."
+62,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,2,2011-07-13,"I am satisfied with this purchase, although delivery could be faster. I checked similar products before buying."
+63,84029E,RED WOOLLY HOTTIE WHITE HEART,2,2011-02-24,"Some parts are good, but other details feel average. I noticed this after using the product."
+64,22633,HAND WARMER UNION JACK,5,2010-12-02,"The product works, although the design is not very impressive."
+65,21730,GLASS STAR FROSTED T-LIGHT HOLDER,4,2011-07-28,Useful and practical item. It works better than I expected. I checked similar products before buying.
+66,85123A,WHITE HANGING HEART T-LIGHT HOLDER,4,2011-08-20,The item looks elegant and performs as expected.
+67,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-11-12,"The product has some useful features, but overall I am not satisfied. I checked similar products before buying."
+68,22632,HAND WARMER RED POLKA DOT,4,2011-08-09,"Good quality, but the price is slightly higher than I would like. I noticed this after using the product."
+69,21258,VICTORIAN SEWING BOX LARGE,4,2010-12-21,"I like the product, but the material could feel a little stronger."
+70,22752,SET 7 BABUSHKA NESTING BOXES,4,2010-12-04,"The item is usable, but I am not fully convinced."
+71,71053,WHITE METAL LANTERN,4,2011-09-08,"Excellent product, very good quality and beautiful design."
+72,84029E,RED WOOLLY HOTTIE WHITE HEART,2,2010-12-08,"It looked good at first, but after using it I noticed several problems."
+73,71053,WHITE METAL LANTERN,4,2011-03-20,"The item is usable, but I am not fully convinced. For this price, the result is acceptable."
+74,22386,JUMBO BAG PINK POLKADOT,5,2011-06-19,"Very useful product, solid and nicely made."
+75,22633,HAND WARMER UNION JACK,5,2011-06-14,Nice design and good quality for the price.
+76,22633,HAND WARMER UNION JACK,5,2010-12-11,"The product quality is good, but the packaging was average."
+77,84029E,RED WOOLLY HOTTIE WHITE HEART,2,2011-11-19,"Delivery was fast, but the product quality was poor. My opinion may change after longer use."
+78,71053,WHITE METAL LANTERN,5,2011-11-22,"It looked good at first, but after using it I noticed several problems."
+79,21258,VICTORIAN SEWING BOX LARGE,5,2011-06-27,Great value for money and the product works well. The first impression was different than expected.
+80,22386,JUMBO BAG PINK POLKADOT,5,2011-03-22,The item looks elegant and performs as expected. I used it for a few days.
+81,71053,WHITE METAL LANTERN,2,2011-08-25,"The item is usable, but I would not buy it again."
+82,21258,VICTORIAN SEWING BOX LARGE,5,2011-11-25,"Very useful product, solid and nicely made."
+83,21258,VICTORIAN SEWING BOX LARGE,2,2011-04-27,"The product did not meet my expectations. For this price, the result is acceptable."
+84,22633,HAND WARMER UNION JACK,4,2011-01-24,"I am satisfied with this purchase, although delivery could be faster. The product has both advantages and disadvantages."
+85,22086,PAPER CHAIN KIT 50'S CHRISTMAS,5,2011-05-11,"Some parts are good, but other details feel average."
+86,22386,JUMBO BAG PINK POLKADOT,2,2011-06-12,"Average product, acceptable but nothing special."
+87,21730,GLASS STAR FROSTED T-LIGHT HOLDER,3,2011-06-17,The purchase was neither very good nor very bad.
+88,22086,PAPER CHAIN KIT 50'S CHRISTMAS,4,2011-05-18,Delivery was normal and the product is acceptable. My opinion may change after longer use.
+89,84406B,CREAM CUPID HEARTS COAT HANGER,4,2011-04-21,"I am satisfied with this purchase, although delivery could be faster. The first impression was different than expected."
+90,22386,JUMBO BAG PINK POLKADOT,4,2011-09-26,Neutral experience. The item is usable but not impressive. It is hard to compare with other items.
+91,22114,HOT WATER BOTTLE TEA AND SYMPATHY,4,2011-09-09,Great value for money and the product works well.
+92,84029E,RED WOOLLY HOTTIE WHITE HEART,3,2011-01-09,The product arrived in poor condition. It is hard to compare with other items.
+93,22386,JUMBO BAG PINK POLKADOT,5,2011-09-30,I would buy this product again because it is reliable and practical. I checked similar products before buying.
+94,84029E,RED WOOLLY HOTTIE WHITE HEART,3,2011-02-18,"The product is not bad, but I would not call it excellent. The product has both advantages and disadvantages."
+95,84029E,RED WOOLLY HOTTIE WHITE HEART,5,2011-10-03,"Excellent product, very good quality and beautiful design."
+96,22752,SET 7 BABUSHKA NESTING BOXES,4,2011-07-11,Nice design and good quality for the price. The product has both advantages and disadvantages.
+97,21258,VICTORIAN SEWING BOX LARGE,5,2011-07-28,Nice design and good quality for the price. I noticed this after using the product.
+98,71053,WHITE METAL LANTERN,4,2011-01-01,"Good product overall, even if it is not perfect. I checked similar products before buying."
+99,22114,HOT WATER BOTTLE TEA AND SYMPATHY,2,2011-10-30,"The item looks nice, but the quality is disappointing."
+100,21730,GLASS STAR FROSTED T-LIGHT HOLDER,5,2011-01-01,"It works as described, but the quality could be better."
+101,84406B,CREAM CUPID HEARTS COAT HANGER,4,2011-03-06,I would buy this product again because it is reliable and practical. I used it for a few days.
+102,22386,JUMBO BAG PINK POLKADOT,4,2011-11-27,"I am satisfied with this purchase, although delivery could be faster. This may depend on customer expectations."
+103,22752,SET 7 BABUSHKA NESTING BOXES,4,2011-05-20,"I am satisfied with this purchase, although delivery could be faster."
+104,84406B,CREAM CUPID HEARTS COAT HANGER,4,2011-07-19,"Overall positive experience with this product. For this price, the result is acceptable."
+105,71053,WHITE METAL LANTERN,5,2011-07-08,I would buy this product again because it is reliable and practical. The description was mostly accurate.
+106,84406B,CREAM CUPID HEARTS COAT HANGER,1,2011-02-12,The product arrived in poor condition. I checked similar products before buying.
+107,21730,GLASS STAR FROSTED T-LIGHT HOLDER,2,2011-03-17,"The product has some useful features, but overall I am not satisfied. This may depend on customer expectations."
+108,22086,PAPER CHAIN KIT 50'S CHRISTMAS,5,2011-06-02,"The item looks elegant and performs as expected. For this price, the result is acceptable."
+109,22632,HAND WARMER RED POLKA DOT,3,2011-08-01,It is a standard item with no major advantages or disadvantages.
+110,22632,HAND WARMER RED POLKA DOT,3,2011-08-22,"The item is usable, but I am not fully convinced. The product has both advantages and disadvantages."
+111,85099C,JUMBO BAG BAROQUE BLACK WHITE,4,2011-03-01,The item looks elegant and performs as expected.
+112,85123A,WHITE HANGING HEART T-LIGHT HOLDER,4,2011-05-27,Nice design and good quality for the price. I used it for a few days.
+113,22114,HOT WATER BOTTLE TEA AND SYMPATHY,3,2011-02-13,"The design is nice, but the item does not work well."
+114,21730,GLASS STAR FROSTED T-LIGHT HOLDER,4,2011-05-17,"The product is okay, but I expected a little more."
+115,22632,HAND WARMER RED POLKA DOT,3,2011-05-10,I expected better quality for this price.
+116,71053,WHITE METAL LANTERN,5,2011-07-31,I would buy this product again because it is reliable and practical.
+117,21730,GLASS STAR FROSTED T-LIGHT HOLDER,5,2011-02-20,"I like the product, but the material could feel a little stronger. The product has both advantages and disadvantages."
+118,22752,SET 7 BABUSHKA NESTING BOXES,3,2011-04-12,"Quality is acceptable, but there are better alternatives. It is hard to compare with other items."
+119,71053,WHITE METAL LANTERN,4,2011-07-22,"Beautiful item, exactly as described. I would recommend it. For this price, the result is acceptable."
+120,22086,PAPER CHAIN KIT 50'S CHRISTMAS,4,2011-08-04,"Overall positive experience with this product. For this price, the result is acceptable."
+121,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-10-30,It is a standard item with no major advantages or disadvantages.
+122,22386,JUMBO BAG PINK POLKADOT,4,2011-07-05,Great value for money and the product works well.
+123,71053,WHITE METAL LANTERN,5,2011-06-09,"Very useful product, solid and nicely made."
+124,85123A,WHITE HANGING HEART T-LIGHT HOLDER,4,2011-03-30,The product met my expectations and arrived in acceptable condition.
+125,85123A,WHITE HANGING HEART T-LIGHT HOLDER,4,2010-12-05,Great value for money and the product works well. My opinion may change after longer use.
+126,71053,WHITE METAL LANTERN,5,2011-06-30,"Very useful product, solid and nicely made. For this price, the result is acceptable."
+127,22961,JAM MAKING SET PRINTED,5,2011-03-05,Delivery was normal and the product is acceptable. The product has both advantages and disadvantages.
+128,22086,PAPER CHAIN KIT 50'S CHRISTMAS,4,2010-12-13,It is a standard item with no major advantages or disadvantages. It is hard to compare with other items.
+129,22386,JUMBO BAG PINK POLKADOT,4,2011-03-21,"Quality is acceptable, but there are better alternatives."
+130,22114,HOT WATER BOTTLE TEA AND SYMPATHY,1,2011-05-25,"The item is usable, but I would not buy it again. I used it for a few days."
+131,22086,PAPER CHAIN KIT 50'S CHRISTMAS,5,2011-06-30,"I would buy this product again because it is reliable and practical. For this price, the result is acceptable."
+132,22114,HOT WATER BOTTLE TEA AND SYMPATHY,1,2011-01-27,"The item is usable, but I would not buy it again. I checked similar products before buying."
+133,22386,JUMBO BAG PINK POLKADOT,4,2011-07-10,The product met my expectations and arrived in acceptable condition.
+134,22961,JAM MAKING SET PRINTED,5,2010-12-17,"Excellent product, very good quality and beautiful design. My opinion may change after longer use."
+135,22086,PAPER CHAIN KIT 50'S CHRISTMAS,5,2011-10-12,I would buy this product again because it is reliable and practical. This may depend on customer expectations.
+136,22086,PAPER CHAIN KIT 50'S CHRISTMAS,5,2011-03-23,The product met my expectations and arrived in acceptable condition. My opinion may change after longer use.
+137,22086,PAPER CHAIN KIT 50'S CHRISTMAS,4,2011-03-03,"Good product overall, even if it is not perfect. I noticed this after using the product."
+138,22633,HAND WARMER UNION JACK,3,2011-03-24,The product did not meet my expectations. The description was mostly accurate.
+139,84029E,RED WOOLLY HOTTIE WHITE HEART,1,2011-07-08,The product feels fragile and not very reliable.
+140,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-10-27,Overall positive experience with this product.
+141,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,1,2011-05-05,"It looked good at first, but after using it I noticed several problems."
+142,84029E,RED WOOLLY HOTTIE WHITE HEART,1,2011-10-17,I am disappointed with this purchase.
+143,22633,HAND WARMER UNION JACK,2,2011-09-06,"The design is nice, but the item does not work well."
+144,22752,SET 7 BABUSHKA NESTING BOXES,5,2011-06-05,The item looks elegant and performs as expected.
+145,21258,VICTORIAN SEWING BOX LARGE,5,2011-11-06,"Excellent product, very good quality and beautiful design. I used it for a few days."
+146,22086,PAPER CHAIN KIT 50'S CHRISTMAS,3,2011-10-01,"The product has some useful features, but overall I am not satisfied."
+147,85123A,WHITE HANGING HEART T-LIGHT HOLDER,4,2011-04-01,"I am satisfied with this purchase, although delivery could be faster. The product has both advantages and disadvantages."
+148,22632,HAND WARMER RED POLKA DOT,3,2011-09-26,It is a standard item with no major advantages or disadvantages.
+149,84406B,CREAM CUPID HEARTS COAT HANGER,5,2011-02-27,Nice design and good quality for the price. I checked similar products before buying.
+150,85123A,WHITE HANGING HEART T-LIGHT HOLDER,4,2011-10-30,Nice design and good quality for the price. This may depend on customer expectations.
+151,22114,HOT WATER BOTTLE TEA AND SYMPATHY,2,2011-05-22,The product feels fragile and not very reliable. I checked similar products before buying.
+152,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,4,2011-09-24,Overall positive experience with this product. The description was mostly accurate.
+153,21730,GLASS STAR FROSTED T-LIGHT HOLDER,4,2011-03-17,The product met my expectations and arrived in acceptable condition.
+154,22632,HAND WARMER RED POLKA DOT,4,2011-04-30,"The product quality is good, but the packaging was average."
+155,22114,HOT WATER BOTTLE TEA AND SYMPATHY,2,2011-09-02,Delivery was normal and the product is acceptable. I used it for a few days.
+156,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-03-29,"The product is okay, but I expected a little more."
+157,71053,WHITE METAL LANTERN,5,2011-01-16,Delivery was normal and the product is acceptable.
+158,71053,WHITE METAL LANTERN,5,2011-06-20,"Good product overall, even if it is not perfect. My opinion may change after longer use."
+159,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,4,2011-01-30,Useful and practical item. It works better than I expected. I used it for a few days.
+160,71053,WHITE METAL LANTERN,5,2011-05-08,The item looks elegant and performs as expected. I noticed this after using the product.
+161,22633,HAND WARMER UNION JACK,4,2011-10-01,"I am satisfied with this purchase, although delivery could be faster. For this price, the result is acceptable."
+162,21258,VICTORIAN SEWING BOX LARGE,3,2011-05-25,The item looks elegant and performs as expected. I noticed this after using the product.
+163,22632,HAND WARMER RED POLKA DOT,4,2011-01-08,Useful and practical item. It works better than I expected. I noticed this after using the product.
+164,22086,PAPER CHAIN KIT 50'S CHRISTMAS,3,2011-02-04,The product is fine for the price.
+165,85099C,JUMBO BAG BAROQUE BLACK WHITE,5,2011-10-19,"The product quality is good, but the packaging was average. It is hard to compare with other items."
+166,22386,JUMBO BAG PINK POLKADOT,4,2011-11-25,Great value for money and the product works well.
+167,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-03-28,Great value for money and the product works well.
+168,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-08-30,"Very useful product, solid and nicely made."
+169,22386,JUMBO BAG PINK POLKADOT,4,2011-11-27,"Great value for money and the product works well. For this price, the result is acceptable."
+170,85123A,WHITE HANGING HEART T-LIGHT HOLDER,4,2011-05-12,"Beautiful item, exactly as described. I would recommend it. I used it for a few days."
+171,85123A,WHITE HANGING HEART T-LIGHT HOLDER,4,2011-05-03,Neutral experience. The item is usable but not impressive. The first impression was different than expected.
+172,84406B,CREAM CUPID HEARTS COAT HANGER,5,2011-07-25,"I like the product, but the material could feel a little stronger. My opinion may change after longer use."
+173,22632,HAND WARMER RED POLKA DOT,3,2011-02-06,"The product works, although the design is not very impressive. The product has both advantages and disadvantages."
+174,71053,WHITE METAL LANTERN,3,2011-04-10,It is a standard item with no major advantages or disadvantages.
+175,22632,HAND WARMER RED POLKA DOT,4,2011-01-26,Overall positive experience with this product.
+176,22633,HAND WARMER UNION JACK,5,2011-08-05,"The design is nice, but the item does not work well. It is hard to compare with other items."
+177,21730,GLASS STAR FROSTED T-LIGHT HOLDER,3,2011-03-12,I have mixed feelings about this product.
+178,85099C,JUMBO BAG BAROQUE BLACK WHITE,5,2011-09-12,"It works as described, but the quality could be better."
+179,22752,SET 7 BABUSHKA NESTING BOXES,3,2011-02-23,The material feels cheap and unreliable.
+180,84029E,RED WOOLLY HOTTIE WHITE HEART,3,2011-04-20,"The item is usable, but I am not fully convinced."
+181,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-06-02,"Good quality, but the price is slightly higher than I would like."
+182,22086,PAPER CHAIN KIT 50'S CHRISTMAS,5,2011-05-14,It is a standard item with no major advantages or disadvantages.
+183,22086,PAPER CHAIN KIT 50'S CHRISTMAS,5,2010-12-10,"Good product overall, even if it is not perfect. For this price, the result is acceptable."
+184,22086,PAPER CHAIN KIT 50'S CHRISTMAS,4,2011-02-25,"Good product overall, even if it is not perfect."
+185,84029E,RED WOOLLY HOTTIE WHITE HEART,5,2011-05-13,"The item is usable, but I am not fully convinced."
+186,22086,PAPER CHAIN KIT 50'S CHRISTMAS,3,2011-02-27,"The product works, although the design is not very impressive. For this price, the result is acceptable."
+187,71053,WHITE METAL LANTERN,4,2011-05-30,"It works as described, but the quality could be better."
+188,22086,PAPER CHAIN KIT 50'S CHRISTMAS,5,2011-07-17,"Good quality, but the price is slightly higher than I would like. The product has both advantages and disadvantages."
+189,71053,WHITE METAL LANTERN,4,2011-10-27,"Useful and practical item. It works better than I expected. For this price, the result is acceptable."
+190,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-01-14,"Very useful product, solid and nicely made. The product has both advantages and disadvantages."
+191,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,3,2011-10-07,"The product works, although the design is not very impressive."
+192,22086,PAPER CHAIN KIT 50'S CHRISTMAS,4,2010-12-21,"Very useful product, solid and nicely made."
+193,71053,WHITE METAL LANTERN,4,2011-05-25,"The product quality is good, but the packaging was average."
+194,22114,HOT WATER BOTTLE TEA AND SYMPATHY,1,2011-01-04,"Bad quality and poor durability. For this price, the result is acceptable."
+195,21730,GLASS STAR FROSTED T-LIGHT HOLDER,3,2011-10-11,"Very useful product, solid and nicely made."
+196,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-03-13,"I am satisfied with this purchase, although delivery could be faster. This may depend on customer expectations."
+197,22633,HAND WARMER UNION JACK,4,2011-01-17,"Very useful product, solid and nicely made."
+198,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-07-03,Nice design and good quality for the price. I used it for a few days.
+199,22961,JAM MAKING SET PRINTED,5,2010-12-20,Great value for money and the product works well.
+200,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,2,2011-07-03,"The product is okay, but I expected a little more."
+201,22114,HOT WATER BOTTLE TEA AND SYMPATHY,1,2011-06-19,The product feels fragile and not very reliable.
+202,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,3,2011-09-20,"Quality is acceptable, but there are better alternatives. I used it for a few days."
+203,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,2,2011-07-06,It is a standard item with no major advantages or disadvantages. I noticed this after using the product.
+204,22632,HAND WARMER RED POLKA DOT,5,2011-06-29,"Good quality, but the price is slightly higher than I would like. I checked similar products before buying."
+205,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-07-11,Delivery was normal and the product is acceptable. The first impression was different than expected.
+206,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,5,2011-04-27,Overall positive experience with this product. The product has both advantages and disadvantages.
+207,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-11-03,"Good product overall, even if it is not perfect."
+208,22386,JUMBO BAG PINK POLKADOT,5,2011-07-05,"Good product overall, even if it is not perfect. I used it for a few days."
+209,22386,JUMBO BAG PINK POLKADOT,4,2010-12-24,"The product quality is good, but the packaging was average. My opinion may change after longer use."
+210,22114,HOT WATER BOTTLE TEA AND SYMPATHY,4,2011-05-24,"Some parts are good, but other details feel average."
+211,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-10-14,"Excellent product, very good quality and beautiful design. I noticed this after using the product."
+212,22632,HAND WARMER RED POLKA DOT,3,2011-04-26,"It works as described, but the quality could be better. For this price, the result is acceptable."
+213,22633,HAND WARMER UNION JACK,4,2011-02-25,"The product quality is good, but the packaging was average. I noticed this after using the product."
+214,84406B,CREAM CUPID HEARTS COAT HANGER,3,2011-08-14,"It does the job, but nothing more."
+215,22114,HOT WATER BOTTLE TEA AND SYMPATHY,3,2010-12-06,"Some parts are good, but other details feel average."
+216,71053,WHITE METAL LANTERN,5,2011-06-12,Neutral experience. The item is usable but not impressive. I checked similar products before buying.
+217,22114,HOT WATER BOTTLE TEA AND SYMPATHY,1,2011-02-27,The product did not meet my expectations. I noticed this after using the product.
+218,71053,WHITE METAL LANTERN,4,2010-12-02,Overall positive experience with this product. I used it for a few days.
+219,22632,HAND WARMER RED POLKA DOT,3,2011-05-10,The material feels cheap and unreliable.
+220,21730,GLASS STAR FROSTED T-LIGHT HOLDER,5,2011-03-31,"Very useful product, solid and nicely made. The product has both advantages and disadvantages."
+221,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,3,2011-09-24,"I am satisfied with this purchase, although delivery could be faster."
+222,21258,VICTORIAN SEWING BOX LARGE,4,2010-12-26,"I am satisfied with this purchase, although delivery could be faster."
+223,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,4,2011-04-30,"Good quality, but the price is slightly higher than I would like."
+224,84406B,CREAM CUPID HEARTS COAT HANGER,4,2011-07-23,The purchase was neither very good nor very bad. I checked similar products before buying.
+225,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-10-30,"I am satisfied with this purchase, although delivery could be faster."
+226,85099C,JUMBO BAG BAROQUE BLACK WHITE,3,2011-07-28,Delivery was normal and the product is acceptable.
+227,71053,WHITE METAL LANTERN,5,2011-06-07,"It works as described, but the quality could be better. The first impression was different than expected."
+228,22632,HAND WARMER RED POLKA DOT,5,2011-10-08,"I am satisfied with this purchase, although delivery could be faster. It is hard to compare with other items."
+229,22633,HAND WARMER UNION JACK,5,2011-11-22,"Very useful product, solid and nicely made."
+230,71053,WHITE METAL LANTERN,5,2011-05-21,"Excellent product, very good quality and beautiful design."
+231,85123A,WHITE HANGING HEART T-LIGHT HOLDER,4,2010-12-11,"The product works, although the design is not very impressive."
+232,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,1,2010-12-18,The product is not worth the money.
+233,84029E,RED WOOLLY HOTTIE WHITE HEART,1,2011-09-30,"Delivery was fast, but the product quality was poor. The description was mostly accurate."
+234,22633,HAND WARMER UNION JACK,4,2011-11-06,The item looks elegant and performs as expected.
+235,84406B,CREAM CUPID HEARTS COAT HANGER,5,2011-01-31,"Good product overall, even if it is not perfect."
+236,22633,HAND WARMER UNION JACK,3,2011-09-21,"Quality is acceptable, but there are better alternatives. I noticed this after using the product."
+237,22632,HAND WARMER RED POLKA DOT,4,2011-07-20,Useful and practical item. It works better than I expected.
+238,21730,GLASS STAR FROSTED T-LIGHT HOLDER,4,2011-05-18,I would buy this product again because it is reliable and practical.
+239,22086,PAPER CHAIN KIT 50'S CHRISTMAS,5,2011-03-16,"Excellent product, very good quality and beautiful design."
+240,22633,HAND WARMER UNION JACK,4,2011-11-21,Overall positive experience with this product. It is hard to compare with other items.
+241,22632,HAND WARMER RED POLKA DOT,5,2010-12-13,"It works as described, but the quality could be better."
+242,22086,PAPER CHAIN KIT 50'S CHRISTMAS,4,2011-11-09,The product feels fragile and not very reliable. I used it for a few days.
+243,22632,HAND WARMER RED POLKA DOT,4,2010-12-31,Great value for money and the product works well. I noticed this after using the product.
+244,84406B,CREAM CUPID HEARTS COAT HANGER,5,2011-01-09,The item looks elegant and performs as expected.
+245,22633,HAND WARMER UNION JACK,4,2011-03-16,Overall positive experience with this product. The description was mostly accurate.
+246,71053,WHITE METAL LANTERN,3,2011-09-22,I would buy this product again because it is reliable and practical.
+247,85099C,JUMBO BAG BAROQUE BLACK WHITE,4,2011-09-24,"Quality is acceptable, but there are better alternatives."
+248,22633,HAND WARMER UNION JACK,5,2011-11-10,"I like the product, but the material could feel a little stronger."
+249,22961,JAM MAKING SET PRINTED,5,2011-09-14,The material feels cheap and unreliable.
+250,71053,WHITE METAL LANTERN,5,2011-03-30,"The design is nice, but the item does not work well."
+251,21730,GLASS STAR FROSTED T-LIGHT HOLDER,3,2011-05-07,The product arrived in poor condition. The description was mostly accurate.
+252,22632,HAND WARMER RED POLKA DOT,2,2011-11-22,Bad quality and poor durability. I checked similar products before buying.
+253,22632,HAND WARMER RED POLKA DOT,4,2011-01-14,"Good quality, but the price is slightly higher than I would like."
+254,22086,PAPER CHAIN KIT 50'S CHRISTMAS,4,2011-10-24,I would buy this product again because it is reliable and practical.
+255,22632,HAND WARMER RED POLKA DOT,1,2011-10-09,Poor quality. The product broke after first use.
+256,22961,JAM MAKING SET PRINTED,4,2011-01-02,"The item is usable, but I would not buy it again."
+257,22632,HAND WARMER RED POLKA DOT,5,2011-10-07,"Good product overall, even if it is not perfect. The product has both advantages and disadvantages."
+258,22633,HAND WARMER UNION JACK,5,2011-08-20,"The product quality is good, but the packaging was average."
+259,22086,PAPER CHAIN KIT 50'S CHRISTMAS,4,2011-11-23,The product is fine for the price.
+260,71053,WHITE METAL LANTERN,5,2011-07-27,"Good quality, but the price is slightly higher than I would like."
+261,22086,PAPER CHAIN KIT 50'S CHRISTMAS,3,2010-12-03,"Some parts are good, but other details feel average."
+262,84029E,RED WOOLLY HOTTIE WHITE HEART,2,2011-11-13,The product arrived in poor condition.
+263,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2010-12-27,"I like the product, but the material could feel a little stronger."
+264,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-11-02,"The product quality is good, but the packaging was average."
+265,71053,WHITE METAL LANTERN,5,2011-07-18,"I like the product, but the material could feel a little stronger. I checked similar products before buying."
+266,21258,VICTORIAN SEWING BOX LARGE,2,2011-02-18,The item looks elegant and performs as expected.
+267,22752,SET 7 BABUSHKA NESTING BOXES,4,2011-08-20,"Good product overall, even if it is not perfect. I used it for a few days."
+268,22632,HAND WARMER RED POLKA DOT,1,2011-01-03,The product arrived in poor condition.
+269,22752,SET 7 BABUSHKA NESTING BOXES,4,2011-07-01,"I like the product, but the material could feel a little stronger."
+270,22633,HAND WARMER UNION JACK,5,2011-08-27,Neutral experience. The item is usable but not impressive.
+271,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,5,2011-08-22,"Good quality, but the price is slightly higher than I would like. For this price, the result is acceptable."
+272,21730,GLASS STAR FROSTED T-LIGHT HOLDER,4,2011-10-25,I would buy this product again because it is reliable and practical.
+273,22632,HAND WARMER RED POLKA DOT,4,2011-07-05,"I am satisfied with this purchase, although delivery could be faster. I used it for a few days."
+274,85099C,JUMBO BAG BAROQUE BLACK WHITE,4,2011-06-16,Overall positive experience with this product.
+275,22386,JUMBO BAG PINK POLKADOT,4,2011-09-12,"Good product overall, even if it is not perfect. I used it for a few days."
+276,85123A,WHITE HANGING HEART T-LIGHT HOLDER,3,2011-07-22,"I am satisfied with this purchase, although delivery could be faster."
+277,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-03-10,"Very useful product, solid and nicely made."
+278,22632,HAND WARMER RED POLKA DOT,5,2011-06-14,"The product quality is good, but the packaging was average. My opinion may change after longer use."
+279,22632,HAND WARMER RED POLKA DOT,3,2011-11-14,"The product is okay, but I expected a little more."
+280,22114,HOT WATER BOTTLE TEA AND SYMPATHY,2,2011-11-04,"Excellent product, very good quality and beautiful design. The product has both advantages and disadvantages."
+281,85099C,JUMBO BAG BAROQUE BLACK WHITE,2,2011-03-21,Delivery was normal and the product is acceptable.
+282,84029E,RED WOOLLY HOTTIE WHITE HEART,1,2011-03-25,Overall positive experience with this product.
+283,22752,SET 7 BABUSHKA NESTING BOXES,4,2011-09-18,"Very useful product, solid and nicely made."
+284,22752,SET 7 BABUSHKA NESTING BOXES,5,2011-06-11,The product is not worth the money. My opinion may change after longer use.
+285,22632,HAND WARMER RED POLKA DOT,3,2011-04-04,The product met my expectations and arrived in acceptable condition.
+286,84029E,RED WOOLLY HOTTIE WHITE HEART,1,2010-12-22,I expected better quality for this price.
+287,84029E,RED WOOLLY HOTTIE WHITE HEART,1,2011-11-24,I expected better quality for this price. The first impression was different than expected.
+288,22633,HAND WARMER UNION JACK,4,2011-11-13,Nice design and good quality for the price.
+289,85123A,WHITE HANGING HEART T-LIGHT HOLDER,4,2011-08-19,The item looks elegant and performs as expected.
+290,22633,HAND WARMER UNION JACK,3,2011-08-13,The material feels cheap and unreliable.
+291,84406B,CREAM CUPID HEARTS COAT HANGER,3,2011-03-12,"The design is nice, but the item does not work well. For this price, the result is acceptable."
+292,85099C,JUMBO BAG BAROQUE BLACK WHITE,3,2011-10-06,"Very useful product, solid and nicely made. I noticed this after using the product."
+293,21258,VICTORIAN SEWING BOX LARGE,5,2011-02-05,The item looks elegant and performs as expected.
+294,84029E,RED WOOLLY HOTTIE WHITE HEART,2,2011-11-07,"The product has some useful features, but overall I am not satisfied."
+295,22386,JUMBO BAG PINK POLKADOT,3,2011-08-26,"Beautiful item, exactly as described. I would recommend it. My opinion may change after longer use."
+296,84029E,RED WOOLLY HOTTIE WHITE HEART,1,2010-12-06,The product is not worth the money.
+297,84029E,RED WOOLLY HOTTIE WHITE HEART,2,2011-09-18,The product feels fragile and not very reliable.
+298,22633,HAND WARMER UNION JACK,4,2011-10-04,"It does the job, but nothing more. My opinion may change after longer use."
+299,22632,HAND WARMER RED POLKA DOT,2,2011-09-07,"The item is usable, but I would not buy it again."
+300,84406B,CREAM CUPID HEARTS COAT HANGER,3,2011-06-23,It is a standard item with no major advantages or disadvantages.
+301,22633,HAND WARMER UNION JACK,4,2011-06-09,"I like the product, but the material could feel a little stronger."
+302,22386,JUMBO BAG PINK POLKADOT,4,2011-02-27,I would buy this product again because it is reliable and practical. It is hard to compare with other items.
+303,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-04-06,"Some parts are good, but other details feel average."
+304,85123A,WHITE HANGING HEART T-LIGHT HOLDER,4,2011-01-13,"I like the product, but the material could feel a little stronger. My opinion may change after longer use."
+305,71053,WHITE METAL LANTERN,3,2011-04-28,"Excellent product, very good quality and beautiful design. The first impression was different than expected."
+306,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,3,2011-06-23,"The item is usable, but I am not fully convinced."
+307,71053,WHITE METAL LANTERN,5,2011-10-30,"The product is okay, but I expected a little more. The product has both advantages and disadvantages."
+308,22632,HAND WARMER RED POLKA DOT,5,2011-09-15,"The item is usable, but I am not fully convinced."
+309,85123A,WHITE HANGING HEART T-LIGHT HOLDER,4,2011-09-21,"Excellent product, very good quality and beautiful design."
+310,21730,GLASS STAR FROSTED T-LIGHT HOLDER,2,2011-02-06,The product arrived in poor condition.
+311,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-05-02,The item looks elegant and performs as expected. The description was mostly accurate.
+312,71053,WHITE METAL LANTERN,5,2011-05-18,The product did not meet my expectations. I used it for a few days.
+313,22632,HAND WARMER RED POLKA DOT,4,2011-03-30,"Very useful product, solid and nicely made."
+314,84029E,RED WOOLLY HOTTIE WHITE HEART,1,2011-07-07,Bad quality and poor durability.
+315,22752,SET 7 BABUSHKA NESTING BOXES,5,2011-09-13,Great value for money and the product works well.
+316,22386,JUMBO BAG PINK POLKADOT,4,2011-09-06,"The item looks nice, but the quality is disappointing."
+317,85099C,JUMBO BAG BAROQUE BLACK WHITE,5,2011-06-08,"Excellent product, very good quality and beautiful design."
+318,84029E,RED WOOLLY HOTTIE WHITE HEART,1,2011-06-05,"Excellent product, very good quality and beautiful design."
+319,84406B,CREAM CUPID HEARTS COAT HANGER,5,2011-08-27,"Good product overall, even if it is not perfect. The first impression was different than expected."
+320,22752,SET 7 BABUSHKA NESTING BOXES,4,2011-10-30,"Good product overall, even if it is not perfect."
+321,22386,JUMBO BAG PINK POLKADOT,5,2010-12-04,Neutral experience. The item is usable but not impressive.
+322,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,4,2011-05-12,"I would buy this product again because it is reliable and practical. For this price, the result is acceptable."
+323,84406B,CREAM CUPID HEARTS COAT HANGER,2,2011-05-11,It is a standard item with no major advantages or disadvantages.
+324,22114,HOT WATER BOTTLE TEA AND SYMPATHY,1,2011-03-11,The item looks elegant and performs as expected.
+325,22632,HAND WARMER RED POLKA DOT,2,2011-07-03,The product feels fragile and not very reliable. I checked similar products before buying.
+326,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-02-14,"Good quality, but the price is slightly higher than I would like."
+327,22086,PAPER CHAIN KIT 50'S CHRISTMAS,5,2011-01-06,"The product is okay, but I expected a little more."
+328,22633,HAND WARMER UNION JACK,5,2011-03-08,"Very useful product, solid and nicely made."
+329,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,1,2011-04-20,Poor quality. The product broke after first use.
+330,22114,HOT WATER BOTTLE TEA AND SYMPATHY,2,2011-08-10,Bad quality and poor durability.
+331,22752,SET 7 BABUSHKA NESTING BOXES,4,2011-03-26,"Delivery was fast, but the product quality was poor. For this price, the result is acceptable."
+332,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,1,2011-06-30,The product feels fragile and not very reliable. I noticed this after using the product.
+333,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,4,2011-10-19,Useful and practical item. It works better than I expected.
+334,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-06-01,The product met my expectations and arrived in acceptable condition.
+335,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-09-30,"Delivery was fast, but the product quality was poor. It is hard to compare with other items."
+336,84029E,RED WOOLLY HOTTIE WHITE HEART,2,2010-12-19,The product is not worth the money.
+337,22632,HAND WARMER RED POLKA DOT,2,2011-05-26,I expected better quality for this price.
+338,84029E,RED WOOLLY HOTTIE WHITE HEART,3,2011-05-14,"Quality is acceptable, but there are better alternatives."
+339,22386,JUMBO BAG PINK POLKADOT,4,2011-06-19,"The product quality is good, but the packaging was average."
+340,22632,HAND WARMER RED POLKA DOT,3,2010-12-25,"The item is usable, but I am not fully convinced."
+341,22632,HAND WARMER RED POLKA DOT,5,2011-04-05,"Excellent product, very good quality and beautiful design. My opinion may change after longer use."
+342,22386,JUMBO BAG PINK POLKADOT,5,2011-01-30,Overall positive experience with this product. The product has both advantages and disadvantages.
+343,22633,HAND WARMER UNION JACK,5,2011-02-15,The product feels fragile and not very reliable. It is hard to compare with other items.
+344,71053,WHITE METAL LANTERN,5,2011-06-20,"Excellent product, very good quality and beautiful design. The description was mostly accurate."
+345,21258,VICTORIAN SEWING BOX LARGE,4,2011-06-09,"Average product, acceptable but nothing special. It is hard to compare with other items."
+346,22386,JUMBO BAG PINK POLKADOT,5,2011-10-18,The item looks elegant and performs as expected.
+347,22961,JAM MAKING SET PRINTED,5,2010-12-07,"Good quality, but the price is slightly higher than I would like."
+348,71053,WHITE METAL LANTERN,4,2011-04-24,Useful and practical item. It works better than I expected. The description was mostly accurate.
+349,22086,PAPER CHAIN KIT 50'S CHRISTMAS,5,2011-05-25,"Beautiful item, exactly as described. I would recommend it. I checked similar products before buying."
+350,22086,PAPER CHAIN KIT 50'S CHRISTMAS,3,2011-05-03,"Beautiful item, exactly as described. I would recommend it. I noticed this after using the product."
+351,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,1,2011-07-10,"The item is usable, but I would not buy it again."
+352,21730,GLASS STAR FROSTED T-LIGHT HOLDER,4,2010-12-22,"The design is nice, but the item does not work well."
+353,22632,HAND WARMER RED POLKA DOT,1,2011-01-17,"Delivery was fast, but the product quality was poor. My opinion may change after longer use."
+354,22633,HAND WARMER UNION JACK,5,2011-04-24,Overall positive experience with this product.
+355,22386,JUMBO BAG PINK POLKADOT,3,2011-02-13,"Average product, acceptable but nothing special."
+356,22114,HOT WATER BOTTLE TEA AND SYMPATHY,2,2011-09-10,"Average product, acceptable but nothing special."
+357,84029E,RED WOOLLY HOTTIE WHITE HEART,1,2011-11-02,"Delivery was normal and the product is acceptable. For this price, the result is acceptable."
+358,71053,WHITE METAL LANTERN,5,2011-11-16,The item looks elegant and performs as expected. I noticed this after using the product.
+359,22632,HAND WARMER RED POLKA DOT,2,2011-11-13,Great value for money and the product works well. I noticed this after using the product.
+360,85123A,WHITE HANGING HEART T-LIGHT HOLDER,4,2011-05-01,"The product quality is good, but the packaging was average."
+361,21730,GLASS STAR FROSTED T-LIGHT HOLDER,4,2011-11-13,Delivery was normal and the product is acceptable.
+362,22386,JUMBO BAG PINK POLKADOT,5,2011-01-10,"The item looks nice, but the quality is disappointing."
+363,22752,SET 7 BABUSHKA NESTING BOXES,3,2011-09-20,Delivery was normal and the product is acceptable. My opinion may change after longer use.
+364,84029E,RED WOOLLY HOTTIE WHITE HEART,2,2011-08-06,The purchase was neither very good nor very bad.
+365,22114,HOT WATER BOTTLE TEA AND SYMPATHY,5,2011-05-17,Great value for money and the product works well. I checked similar products before buying.
+366,22086,PAPER CHAIN KIT 50'S CHRISTMAS,5,2011-02-09,The product is not worth the money. I used it for a few days.
+367,21258,VICTORIAN SEWING BOX LARGE,2,2011-08-06,The product did not meet my expectations. This may depend on customer expectations.
+368,22114,HOT WATER BOTTLE TEA AND SYMPATHY,4,2011-08-22,"Excellent product, very good quality and beautiful design."
+369,84029E,RED WOOLLY HOTTIE WHITE HEART,2,2011-06-21,"The product has some useful features, but overall I am not satisfied. I used it for a few days."
+370,84029E,RED WOOLLY HOTTIE WHITE HEART,2,2011-10-25,"I am satisfied with this purchase, although delivery could be faster. It is hard to compare with other items."
+371,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-09-27,"The product quality is good, but the packaging was average. It is hard to compare with other items."
+372,71053,WHITE METAL LANTERN,5,2011-02-23,Useful and practical item. It works better than I expected.
+373,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2010-12-12,"Good quality, but the price is slightly higher than I would like. For this price, the result is acceptable."
+374,22632,HAND WARMER RED POLKA DOT,3,2011-07-24,"The item is usable, but I am not fully convinced."
+375,21258,VICTORIAN SEWING BOX LARGE,4,2011-09-21,Overall positive experience with this product. The first impression was different than expected.
+376,22632,HAND WARMER RED POLKA DOT,3,2011-07-09,Delivery was normal and the product is acceptable. It is hard to compare with other items.
+377,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-08-10,"Good product overall, even if it is not perfect."
+378,85099C,JUMBO BAG BAROQUE BLACK WHITE,4,2011-02-09,"The product quality is good, but the packaging was average. My opinion may change after longer use."
+379,85123A,WHITE HANGING HEART T-LIGHT HOLDER,4,2011-11-21,The product met my expectations and arrived in acceptable condition.
+380,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,2,2011-10-19,I am disappointed with this purchase. I used it for a few days.
+381,22633,HAND WARMER UNION JACK,5,2011-08-29,Useful and practical item. It works better than I expected. This may depend on customer expectations.
+382,84406B,CREAM CUPID HEARTS COAT HANGER,5,2011-06-22,"The product works, although the design is not very impressive."
+383,22961,JAM MAKING SET PRINTED,4,2011-06-08,"Very useful product, solid and nicely made."
+384,71053,WHITE METAL LANTERN,4,2011-06-13,"I like the product, but the material could feel a little stronger. The description was mostly accurate."
+385,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-02-10,The item looks elegant and performs as expected.
+386,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,2,2011-07-04,"The material feels cheap and unreliable. For this price, the result is acceptable."
+387,22386,JUMBO BAG PINK POLKADOT,4,2011-06-06,Great value for money and the product works well. The first impression was different than expected.
+388,21730,GLASS STAR FROSTED T-LIGHT HOLDER,1,2011-01-04,The product is not worth the money. I used it for a few days.
+389,22752,SET 7 BABUSHKA NESTING BOXES,5,2011-01-18,"Good quality, but the price is slightly higher than I would like. I noticed this after using the product."
+390,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,1,2011-06-10,The product did not meet my expectations.
+391,71053,WHITE METAL LANTERN,4,2011-05-07,"I am satisfied with this purchase, although delivery could be faster. This may depend on customer expectations."
+392,22752,SET 7 BABUSHKA NESTING BOXES,4,2011-06-06,Overall positive experience with this product.
+393,84406B,CREAM CUPID HEARTS COAT HANGER,4,2011-07-28,I would buy this product again because it is reliable and practical.
+394,22633,HAND WARMER UNION JACK,4,2011-01-10,"Good product overall, even if it is not perfect."
+395,21258,VICTORIAN SEWING BOX LARGE,5,2011-07-11,"Good quality, but the price is slightly higher than I would like."
+396,22961,JAM MAKING SET PRINTED,5,2011-07-08,"The product works, although the design is not very impressive. I checked similar products before buying."
+397,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,4,2011-12-01,The product met my expectations and arrived in acceptable condition. This may depend on customer expectations.
+398,22632,HAND WARMER RED POLKA DOT,3,2011-09-07,"The item is usable, but I am not fully convinced."
+399,85099C,JUMBO BAG BAROQUE BLACK WHITE,3,2011-04-04,"Some parts are good, but other details feel average."
+400,22961,JAM MAKING SET PRINTED,5,2011-01-15,"The product works, although the design is not very impressive."
+401,22633,HAND WARMER UNION JACK,4,2011-09-15,"Excellent product, very good quality and beautiful design."
+402,71053,WHITE METAL LANTERN,2,2011-03-22,"The item looks nice, but the quality is disappointing."
+403,71053,WHITE METAL LANTERN,5,2011-08-03,Overall positive experience with this product.
+404,84406B,CREAM CUPID HEARTS COAT HANGER,4,2011-06-26,"Beautiful item, exactly as described. I would recommend it."
+405,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,1,2011-05-14,"It looked good at first, but after using it I noticed several problems."
+406,84406B,CREAM CUPID HEARTS COAT HANGER,2,2011-07-24,The product is not worth the money.
+407,84029E,RED WOOLLY HOTTIE WHITE HEART,4,2011-07-31,"Good quality, but the price is slightly higher than I would like. I noticed this after using the product."
+408,85099C,JUMBO BAG BAROQUE BLACK WHITE,4,2011-05-23,Overall positive experience with this product. It is hard to compare with other items.
+409,22632,HAND WARMER RED POLKA DOT,1,2011-01-18,"Quality is acceptable, but there are better alternatives. My opinion may change after longer use."
+410,84406B,CREAM CUPID HEARTS COAT HANGER,5,2011-03-27,"I am satisfied with this purchase, although delivery could be faster."
+411,21258,VICTORIAN SEWING BOX LARGE,2,2011-08-11,Poor quality. The product broke after first use. The product has both advantages and disadvantages.
+412,22632,HAND WARMER RED POLKA DOT,4,2010-12-05,"I like the product, but the material could feel a little stronger."
+413,22114,HOT WATER BOTTLE TEA AND SYMPATHY,2,2011-05-18,"The product has some useful features, but overall I am not satisfied."
+414,22114,HOT WATER BOTTLE TEA AND SYMPATHY,3,2011-05-15,The product met my expectations and arrived in acceptable condition. I noticed this after using the product.
+415,22752,SET 7 BABUSHKA NESTING BOXES,5,2011-02-02,Useful and practical item. It works better than I expected. I checked similar products before buying.
+416,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-03-20,The item looks elegant and performs as expected. I checked similar products before buying.
+417,22086,PAPER CHAIN KIT 50'S CHRISTMAS,4,2011-02-16,"It works as described, but the quality could be better."
+418,22386,JUMBO BAG PINK POLKADOT,4,2011-07-01,"Good product overall, even if it is not perfect. The first impression was different than expected."
+419,22386,JUMBO BAG PINK POLKADOT,5,2011-06-24,"Delivery was fast, but the product quality was poor."
+420,85099C,JUMBO BAG BAROQUE BLACK WHITE,4,2010-12-02,"Excellent product, very good quality and beautiful design."
+421,71053,WHITE METAL LANTERN,4,2011-05-21,"Beautiful item, exactly as described. I would recommend it."
+422,22632,HAND WARMER RED POLKA DOT,2,2011-01-13,I am disappointed with this purchase. The product has both advantages and disadvantages.
+423,22086,PAPER CHAIN KIT 50'S CHRISTMAS,2,2010-12-28,I am disappointed with this purchase.
+424,71053,WHITE METAL LANTERN,4,2011-07-11,"Excellent product, very good quality and beautiful design."
+425,21730,GLASS STAR FROSTED T-LIGHT HOLDER,4,2011-02-09,"I like the product, but the material could feel a little stronger. The description was mostly accurate."
+426,84029E,RED WOOLLY HOTTIE WHITE HEART,5,2010-12-08,"The product works, although the design is not very impressive. For this price, the result is acceptable."
+427,22114,HOT WATER BOTTLE TEA AND SYMPATHY,2,2011-11-05,The product is not worth the money.
+428,22961,JAM MAKING SET PRINTED,5,2011-04-14,Delivery was normal and the product is acceptable.
+429,85099C,JUMBO BAG BAROQUE BLACK WHITE,4,2011-10-01,"The product quality is good, but the packaging was average. This may depend on customer expectations."
+430,21730,GLASS STAR FROSTED T-LIGHT HOLDER,4,2011-09-27,Great value for money and the product works well.
+431,22086,PAPER CHAIN KIT 50'S CHRISTMAS,5,2011-09-04,"Good product overall, even if it is not perfect."
+432,22086,PAPER CHAIN KIT 50'S CHRISTMAS,5,2011-11-27,Useful and practical item. It works better than I expected. My opinion may change after longer use.
+433,21730,GLASS STAR FROSTED T-LIGHT HOLDER,1,2011-05-10,"The design is nice, but the item does not work well."
+434,85123A,WHITE HANGING HEART T-LIGHT HOLDER,4,2011-02-12,Overall positive experience with this product.
+435,22114,HOT WATER BOTTLE TEA AND SYMPATHY,4,2011-03-24,"Good product overall, even if it is not perfect. For this price, the result is acceptable."
+436,22961,JAM MAKING SET PRINTED,4,2011-09-07,"Nice design and good quality for the price. For this price, the result is acceptable."
+437,22633,HAND WARMER UNION JACK,5,2011-11-04,The product met my expectations and arrived in acceptable condition.
+438,22386,JUMBO BAG PINK POLKADOT,3,2011-05-23,I have mixed feelings about this product.
+439,84406B,CREAM CUPID HEARTS COAT HANGER,1,2011-07-12,"Delivery was fast, but the product quality was poor. I noticed this after using the product."
+440,22086,PAPER CHAIN KIT 50'S CHRISTMAS,5,2011-09-29,"Quality is acceptable, but there are better alternatives. I checked similar products before buying."
+441,22961,JAM MAKING SET PRINTED,5,2011-02-27,I would buy this product again because it is reliable and practical.
+442,22114,HOT WATER BOTTLE TEA AND SYMPATHY,5,2011-08-16,"Very useful product, solid and nicely made. I noticed this after using the product."
+443,22086,PAPER CHAIN KIT 50'S CHRISTMAS,3,2011-02-11,"The product is not bad, but I would not call it excellent."
+444,22386,JUMBO BAG PINK POLKADOT,3,2011-10-29,"Some parts are good, but other details feel average."
+445,21730,GLASS STAR FROSTED T-LIGHT HOLDER,3,2011-01-04,It is a standard item with no major advantages or disadvantages.
+446,84029E,RED WOOLLY HOTTIE WHITE HEART,1,2011-03-13,"Delivery was fast, but the product quality was poor."
+447,22086,PAPER CHAIN KIT 50'S CHRISTMAS,4,2011-09-21,"Good quality, but the price is slightly higher than I would like. I noticed this after using the product."
+448,22632,HAND WARMER RED POLKA DOT,5,2011-08-21,"The design is nice, but the item does not work well. This may depend on customer expectations."
+449,22752,SET 7 BABUSHKA NESTING BOXES,4,2011-06-17,"The product quality is good, but the packaging was average."
+450,71053,WHITE METAL LANTERN,5,2011-07-16,"Beautiful item, exactly as described. I would recommend it. My opinion may change after longer use."
+451,71053,WHITE METAL LANTERN,4,2010-12-31,Great value for money and the product works well.
+452,22633,HAND WARMER UNION JACK,4,2011-01-20,"I am satisfied with this purchase, although delivery could be faster. I used it for a few days."
+453,22752,SET 7 BABUSHKA NESTING BOXES,4,2011-06-27,I would buy this product again because it is reliable and practical. It is hard to compare with other items.
+454,85099C,JUMBO BAG BAROQUE BLACK WHITE,3,2011-06-23,"The item is usable, but I am not fully convinced."
+455,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,3,2011-01-21,The product is fine for the price.
+456,22961,JAM MAKING SET PRINTED,4,2010-12-27,"Good product overall, even if it is not perfect. I used it for a few days."
+457,84029E,RED WOOLLY HOTTIE WHITE HEART,2,2011-08-29,The product did not meet my expectations.
+458,22386,JUMBO BAG PINK POLKADOT,4,2011-05-30,"I am satisfied with this purchase, although delivery could be faster. The description was mostly accurate."
+459,84406B,CREAM CUPID HEARTS COAT HANGER,2,2011-04-13,"Some parts are good, but other details feel average. The product has both advantages and disadvantages."
+460,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2010-12-03,Useful and practical item. It works better than I expected.
+461,71053,WHITE METAL LANTERN,5,2011-08-31,"Beautiful item, exactly as described. I would recommend it."
+462,22961,JAM MAKING SET PRINTED,1,2011-07-29,I expected better quality for this price.
+463,22386,JUMBO BAG PINK POLKADOT,5,2011-06-28,"Good product overall, even if it is not perfect."
+464,71053,WHITE METAL LANTERN,5,2011-02-17,I would buy this product again because it is reliable and practical.
+465,22386,JUMBO BAG PINK POLKADOT,5,2010-12-25,The item looks elegant and performs as expected. This may depend on customer expectations.
+466,22633,HAND WARMER UNION JACK,5,2011-04-22,"Beautiful item, exactly as described. I would recommend it."
+467,21258,VICTORIAN SEWING BOX LARGE,3,2011-10-23,"The item is usable, but I am not fully convinced. The description was mostly accurate."
+468,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-09-21,Useful and practical item. It works better than I expected.
+469,22386,JUMBO BAG PINK POLKADOT,3,2011-09-11,"It works as described, but the quality could be better."
+470,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,1,2011-05-02,The product is not worth the money. I used it for a few days.
+471,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,1,2011-06-12,"The product works, although the design is not very impressive."
+472,21258,VICTORIAN SEWING BOX LARGE,4,2010-12-08,"It looked good at first, but after using it I noticed several problems."
+473,22633,HAND WARMER UNION JACK,4,2011-11-12,"Good quality, but the price is slightly higher than I would like. The product has both advantages and disadvantages."
+474,85123A,WHITE HANGING HEART T-LIGHT HOLDER,4,2010-12-24,It is a standard item with no major advantages or disadvantages.
+475,71053,WHITE METAL LANTERN,5,2011-04-08,"Excellent product, very good quality and beautiful design."
+476,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,3,2011-01-16,The purchase was neither very good nor very bad. I checked similar products before buying.
+477,84029E,RED WOOLLY HOTTIE WHITE HEART,2,2011-04-23,The product feels fragile and not very reliable. It is hard to compare with other items.
+478,22632,HAND WARMER RED POLKA DOT,5,2011-02-17,"Good product overall, even if it is not perfect."
+479,85123A,WHITE HANGING HEART T-LIGHT HOLDER,3,2011-07-30,"Quality is acceptable, but there are better alternatives."
+480,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,2,2011-11-02,"The item looks nice, but the quality is disappointing. The first impression was different than expected."
+481,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,2,2011-02-20,The material feels cheap and unreliable. It is hard to compare with other items.
+482,71053,WHITE METAL LANTERN,5,2011-05-13,"It works as described, but the quality could be better. My opinion may change after longer use."
+483,22114,HOT WATER BOTTLE TEA AND SYMPATHY,2,2011-04-21,The product is not worth the money.
+484,85123A,WHITE HANGING HEART T-LIGHT HOLDER,4,2011-02-25,"The product quality is good, but the packaging was average."
+485,22961,JAM MAKING SET PRINTED,4,2011-06-11,"Average product, acceptable but nothing special. It is hard to compare with other items."
+486,22086,PAPER CHAIN KIT 50'S CHRISTMAS,5,2011-04-29,"Very useful product, solid and nicely made. I noticed this after using the product."
+487,85099C,JUMBO BAG BAROQUE BLACK WHITE,3,2011-06-15,"The item looks nice, but the quality is disappointing. I used it for a few days."
+488,84029E,RED WOOLLY HOTTIE WHITE HEART,4,2011-11-14,"Beautiful item, exactly as described. I would recommend it."
+489,85123A,WHITE HANGING HEART T-LIGHT HOLDER,3,2011-01-16,The purchase was neither very good nor very bad.
+490,21730,GLASS STAR FROSTED T-LIGHT HOLDER,4,2011-06-04,I would buy this product again because it is reliable and practical. The description was mostly accurate.
+491,22114,HOT WATER BOTTLE TEA AND SYMPATHY,3,2010-12-12,Delivery was normal and the product is acceptable.
+492,85099C,JUMBO BAG BAROQUE BLACK WHITE,5,2011-02-12,"Beautiful item, exactly as described. I would recommend it."
+493,84406B,CREAM CUPID HEARTS COAT HANGER,4,2011-09-23,"Good product overall, even if it is not perfect."
+494,85123A,WHITE HANGING HEART T-LIGHT HOLDER,4,2011-09-20,"Very useful product, solid and nicely made."
+495,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-05-11,Delivery was normal and the product is acceptable.
+496,22114,HOT WATER BOTTLE TEA AND SYMPATHY,4,2011-07-18,Overall positive experience with this product.
+497,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-07-17,"The product quality is good, but the packaging was average."
+498,22633,HAND WARMER UNION JACK,5,2011-07-04,"I am satisfied with this purchase, although delivery could be faster."
+499,21730,GLASS STAR FROSTED T-LIGHT HOLDER,3,2011-09-03,"The product works, although the design is not very impressive. It is hard to compare with other items."
+500,22632,HAND WARMER RED POLKA DOT,1,2011-01-03,The material feels cheap and unreliable. It is hard to compare with other items.
+501,84029E,RED WOOLLY HOTTIE WHITE HEART,1,2011-05-04,I am disappointed with this purchase. My opinion may change after longer use.
+502,84029E,RED WOOLLY HOTTIE WHITE HEART,5,2011-02-24,"It works as described, but the quality could be better."
+503,84029E,RED WOOLLY HOTTIE WHITE HEART,3,2011-07-15,"The product is not bad, but I would not call it excellent."
+504,22752,SET 7 BABUSHKA NESTING BOXES,5,2011-11-16,"The item is usable, but I am not fully convinced."
+505,21730,GLASS STAR FROSTED T-LIGHT HOLDER,2,2011-03-03,"Quality is acceptable, but there are better alternatives. The first impression was different than expected."
+506,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-01-15,"Good quality, but the price is slightly higher than I would like. This may depend on customer expectations."
+507,22633,HAND WARMER UNION JACK,5,2011-10-28,Great value for money and the product works well.
+508,22114,HOT WATER BOTTLE TEA AND SYMPATHY,2,2011-01-20,The product is not worth the money.
+509,22633,HAND WARMER UNION JACK,3,2011-08-08,The purchase was neither very good nor very bad.
+510,85123A,WHITE HANGING HEART T-LIGHT HOLDER,4,2011-10-02,Overall positive experience with this product.
+511,85123A,WHITE HANGING HEART T-LIGHT HOLDER,3,2011-02-14,"Some parts are good, but other details feel average. I noticed this after using the product."
+512,22633,HAND WARMER UNION JACK,4,2011-03-25,The product met my expectations and arrived in acceptable condition.
+513,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,3,2011-11-04,"The item is usable, but I am not fully convinced."
+514,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,4,2010-12-23,The product is not worth the money. This may depend on customer expectations.
+515,22752,SET 7 BABUSHKA NESTING BOXES,4,2011-03-26,"I like the product, but the material could feel a little stronger. It is hard to compare with other items."
+516,22961,JAM MAKING SET PRINTED,4,2011-07-15,Nice design and good quality for the price. I noticed this after using the product.
+517,84406B,CREAM CUPID HEARTS COAT HANGER,2,2011-03-22,"Some parts are good, but other details feel average."
+518,85123A,WHITE HANGING HEART T-LIGHT HOLDER,4,2011-05-12,"Good quality, but the price is slightly higher than I would like."
+519,22752,SET 7 BABUSHKA NESTING BOXES,5,2011-08-26,Nice design and good quality for the price.
+520,21730,GLASS STAR FROSTED T-LIGHT HOLDER,4,2011-11-29,"Quality is acceptable, but there are better alternatives. The product has both advantages and disadvantages."
+521,22114,HOT WATER BOTTLE TEA AND SYMPATHY,2,2011-09-02,Poor quality. The product broke after first use.
+522,84406B,CREAM CUPID HEARTS COAT HANGER,5,2010-12-27,I would buy this product again because it is reliable and practical. I noticed this after using the product.
+523,22632,HAND WARMER RED POLKA DOT,4,2011-10-28,"It works as described, but the quality could be better."
+524,22114,HOT WATER BOTTLE TEA AND SYMPATHY,4,2011-07-16,"Beautiful item, exactly as described. I would recommend it."
+525,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-08-31,The item looks elegant and performs as expected.
+526,22632,HAND WARMER RED POLKA DOT,4,2011-10-13,Useful and practical item. It works better than I expected. I noticed this after using the product.
+527,22752,SET 7 BABUSHKA NESTING BOXES,2,2011-10-18,"It looked good at first, but after using it I noticed several problems. The product has both advantages and disadvantages."
+528,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,2,2011-09-21,Poor quality. The product broke after first use. I noticed this after using the product.
+529,22114,HOT WATER BOTTLE TEA AND SYMPATHY,1,2011-07-07,I expected better quality for this price. The description was mostly accurate.
+530,85099C,JUMBO BAG BAROQUE BLACK WHITE,5,2011-10-10,"I am satisfied with this purchase, although delivery could be faster. For this price, the result is acceptable."
+531,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,1,2011-01-30,I am disappointed with this purchase.
+532,84029E,RED WOOLLY HOTTIE WHITE HEART,5,2011-02-21,Nice design and good quality for the price.
+533,22632,HAND WARMER RED POLKA DOT,4,2011-08-18,"Very useful product, solid and nicely made. The first impression was different than expected."
+534,84029E,RED WOOLLY HOTTIE WHITE HEART,3,2011-02-08,"Quality is acceptable, but there are better alternatives."
+535,22633,HAND WARMER UNION JACK,3,2011-11-04,It is a standard item with no major advantages or disadvantages.
+536,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,1,2011-01-16,"The product has some useful features, but overall I am not satisfied. The product has both advantages and disadvantages."
+537,84029E,RED WOOLLY HOTTIE WHITE HEART,5,2011-10-17,Nice design and good quality for the price.
+538,22086,PAPER CHAIN KIT 50'S CHRISTMAS,5,2010-12-13,Useful and practical item. It works better than I expected.
+539,85099C,JUMBO BAG BAROQUE BLACK WHITE,5,2011-07-30,I would buy this product again because it is reliable and practical.
+540,22086,PAPER CHAIN KIT 50'S CHRISTMAS,4,2011-06-01,Overall positive experience with this product. My opinion may change after longer use.
+541,22633,HAND WARMER UNION JACK,5,2011-10-09,The product is not worth the money.
+542,85123A,WHITE HANGING HEART T-LIGHT HOLDER,3,2011-02-23,"Excellent product, very good quality and beautiful design. For this price, the result is acceptable."
+543,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-10-27,The item looks elegant and performs as expected.
+544,22114,HOT WATER BOTTLE TEA AND SYMPATHY,2,2011-04-20,The product feels fragile and not very reliable. The product has both advantages and disadvantages.
+545,22632,HAND WARMER RED POLKA DOT,3,2011-04-10,The product did not meet my expectations.
+546,22114,HOT WATER BOTTLE TEA AND SYMPATHY,1,2011-02-04,I am disappointed with this purchase. I used it for a few days.
+547,22632,HAND WARMER RED POLKA DOT,4,2011-03-14,Great value for money and the product works well. I checked similar products before buying.
+548,21258,VICTORIAN SEWING BOX LARGE,1,2011-10-21,Delivery was normal and the product is acceptable.
+549,84029E,RED WOOLLY HOTTIE WHITE HEART,5,2011-09-26,"Excellent product, very good quality and beautiful design."
+550,84029E,RED WOOLLY HOTTIE WHITE HEART,4,2011-07-01,Great value for money and the product works well.
+551,84029E,RED WOOLLY HOTTIE WHITE HEART,2,2011-06-30,Bad quality and poor durability. The description was mostly accurate.
+552,22752,SET 7 BABUSHKA NESTING BOXES,3,2011-04-03,Useful and practical item. It works better than I expected. The description was mostly accurate.
+553,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,4,2011-02-07,"The product is not worth the money. For this price, the result is acceptable."
+554,22086,PAPER CHAIN KIT 50'S CHRISTMAS,5,2010-12-21,"The product quality is good, but the packaging was average."
+555,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-09-10,Overall positive experience with this product.
+556,84406B,CREAM CUPID HEARTS COAT HANGER,3,2011-01-18,The product is fine for the price.
+557,21730,GLASS STAR FROSTED T-LIGHT HOLDER,3,2011-04-21,I would buy this product again because it is reliable and practical. The product has both advantages and disadvantages.
+558,22114,HOT WATER BOTTLE TEA AND SYMPATHY,1,2011-03-19,Poor quality. The product broke after first use.
+559,84406B,CREAM CUPID HEARTS COAT HANGER,5,2011-06-03,"I am satisfied with this purchase, although delivery could be faster. The description was mostly accurate."
+560,22752,SET 7 BABUSHKA NESTING BOXES,4,2011-01-26,"The item is usable, but I am not fully convinced. I used it for a few days."
+561,22633,HAND WARMER UNION JACK,4,2011-09-17,"It works as described, but the quality could be better. The first impression was different than expected."
+562,22633,HAND WARMER UNION JACK,5,2011-10-10,"Average product, acceptable but nothing special."
+563,22632,HAND WARMER RED POLKA DOT,3,2011-08-06,"It does the job, but nothing more."
+564,22086,PAPER CHAIN KIT 50'S CHRISTMAS,4,2011-05-02,"Quality is acceptable, but there are better alternatives."
+565,22632,HAND WARMER RED POLKA DOT,1,2011-09-07,"The item is usable, but I would not buy it again."
+566,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,5,2011-03-17,"The product is okay, but I expected a little more. The first impression was different than expected."
+567,22114,HOT WATER BOTTLE TEA AND SYMPATHY,4,2011-09-08,"The product quality is good, but the packaging was average. The product has both advantages and disadvantages."
+568,84029E,RED WOOLLY HOTTIE WHITE HEART,1,2011-09-20,The product did not meet my expectations.
+569,85123A,WHITE HANGING HEART T-LIGHT HOLDER,4,2011-06-03,"Beautiful item, exactly as described. I would recommend it. The product has both advantages and disadvantages."
+570,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,3,2011-04-29,"The item is usable, but I am not fully convinced. I noticed this after using the product."
+571,22633,HAND WARMER UNION JACK,4,2011-07-23,Nice design and good quality for the price. My opinion may change after longer use.
+572,22633,HAND WARMER UNION JACK,4,2011-11-18,"The product is not bad, but I would not call it excellent. For this price, the result is acceptable."
+573,85123A,WHITE HANGING HEART T-LIGHT HOLDER,1,2011-10-30,"The item looks nice, but the quality is disappointing. I noticed this after using the product."
+574,22752,SET 7 BABUSHKA NESTING BOXES,3,2011-06-10,"Average product, acceptable but nothing special."
+575,21730,GLASS STAR FROSTED T-LIGHT HOLDER,1,2011-04-04,"The design is nice, but the item does not work well."
+576,85123A,WHITE HANGING HEART T-LIGHT HOLDER,4,2011-04-08,"I am satisfied with this purchase, although delivery could be faster. The first impression was different than expected."
+577,84406B,CREAM CUPID HEARTS COAT HANGER,4,2010-12-08,The item looks elegant and performs as expected.
+578,21730,GLASS STAR FROSTED T-LIGHT HOLDER,4,2011-11-09,The product met my expectations and arrived in acceptable condition. My opinion may change after longer use.
+579,84029E,RED WOOLLY HOTTIE WHITE HEART,2,2010-12-28,The material feels cheap and unreliable. I noticed this after using the product.
+580,84029E,RED WOOLLY HOTTIE WHITE HEART,3,2011-09-23,Poor quality. The product broke after first use. The description was mostly accurate.
+581,22632,HAND WARMER RED POLKA DOT,3,2011-03-02,The purchase was neither very good nor very bad. The product has both advantages and disadvantages.
+582,22086,PAPER CHAIN KIT 50'S CHRISTMAS,4,2010-12-28,The item looks elegant and performs as expected. I checked similar products before buying.
+583,71053,WHITE METAL LANTERN,5,2011-11-19,"Quality is acceptable, but there are better alternatives."
+584,85099C,JUMBO BAG BAROQUE BLACK WHITE,5,2011-02-25,"Excellent product, very good quality and beautiful design. For this price, the result is acceptable."
+585,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,1,2011-06-28,Poor quality. The product broke after first use. The description was mostly accurate.
+586,21730,GLASS STAR FROSTED T-LIGHT HOLDER,2,2011-09-16,Useful and practical item. It works better than I expected. My opinion may change after longer use.
+587,71053,WHITE METAL LANTERN,3,2011-03-16,The product is not worth the money. I checked similar products before buying.
+588,22114,HOT WATER BOTTLE TEA AND SYMPATHY,2,2011-04-22,Neutral experience. The item is usable but not impressive.
+589,85123A,WHITE HANGING HEART T-LIGHT HOLDER,5,2011-02-05,"Beautiful item, exactly as described. I would recommend it."
+590,71053,WHITE METAL LANTERN,4,2011-01-18,Nice design and good quality for the price. I used it for a few days.
+591,85099C,JUMBO BAG BAROQUE BLACK WHITE,4,2011-01-28,"It works as described, but the quality could be better."
+592,21258,VICTORIAN SEWING BOX LARGE,3,2011-03-09,Neutral experience. The item is usable but not impressive. The first impression was different than expected.
+593,84406B,CREAM CUPID HEARTS COAT HANGER,2,2011-03-20,"The product is not bad, but I would not call it excellent. The first impression was different than expected."
+594,71053,WHITE METAL LANTERN,5,2011-06-29,"The product quality is good, but the packaging was average."
+595,22086,PAPER CHAIN KIT 50'S CHRISTMAS,4,2011-05-02,"Beautiful item, exactly as described. I would recommend it. The description was mostly accurate."
+596,21258,VICTORIAN SEWING BOX LARGE,3,2011-02-27,"Some parts are good, but other details feel average."
+597,84029G,KNITTED UNION FLAG HOT WATER BOTTLE,2,2011-09-25,The material feels cheap and unreliable. I used it for a few days.
+598,85099C,JUMBO BAG BAROQUE BLACK WHITE,3,2011-07-31,"It does the job, but nothing more."
+599,22632,HAND WARMER RED POLKA DOT,5,2011-09-08,"The product quality is good, but the packaging was average."
+600,22632,HAND WARMER RED POLKA DOT,3,2011-06-01,I have mixed feelings about this product.

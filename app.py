@@ -47,8 +47,10 @@ st.title("AI Business Insight System")
 st.subheader("Prototyp systemu wspierającego decyzje przedsiębiorstwa")
 
 
-SAMPLE_DATA_PATH = Path("data/sample/sample_sales.csv")
-SAMPLE_REVIEWS_PATH = Path("data/sample/sample_reviews.csv")
+# SAMPLE_DATA_PATH = Path("data/sample/sample_sales.csv")
+# SAMPLE_REVIEWS_PATH = Path("data/sample/sample_reviews.csv")
+SAMPLE_DATA_PATH = Path("data/sample/generated_sales.csv")
+SAMPLE_REVIEWS_PATH = Path("data/sample/generated_reviews.csv")
 
 
 @st.cache_data
@@ -110,7 +112,8 @@ try:
         sales_data_source_description = f"Plik użytkownika: {uploaded_sales_file.name}"
     elif use_sample_sales_data:
         raw_sales_data, cleaned_sales_data = get_sample_sales_data()
-        sales_data_source_description = "Dane przykładowe: data/sample/sample_sales.csv"
+        # sales_data_source_description = "Dane przykładowe: data/sample/sample_sales.csv"
+        sales_data_source_description = "Dane przykładowe: data/sample/generated_sales.csv"
     else:
         raw_sales_data = None
         cleaned_sales_data = None
@@ -129,7 +132,8 @@ try:
         review_data_source_description = f"Plik użytkownika: {uploaded_review_file.name}"
     elif use_sample_review_data:
         raw_review_data, cleaned_review_data = get_sample_review_data()
-        review_data_source_description = "Dane przykładowe: data/sample/sample_reviews.csv"
+        # review_data_source_description = "Dane przykładowe: data/sample/sample_reviews.csv"
+        review_data_source_description = "Dane przykładowe: data/sample/generated_reviews.csv"
     else:
         raw_review_data = None
         cleaned_review_data = None
