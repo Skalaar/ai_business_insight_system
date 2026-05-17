@@ -12,6 +12,7 @@ from src.sales_analysis import (
     sales_by_country,
     top_products,
 )
+from src.recommendations import generate_sales_recommendations
 
 st.set_page_config(
     page_title="AI Business Insight System",
@@ -76,12 +77,13 @@ except Exception as error:
     st.sidebar.error(f"Błąd danych: {error}")
 
 
-tab_intro, tab_data, tab_sales, tab_rfm, tab_export = st.tabs(
+tab_intro, tab_data, tab_sales, tab_rfm, tab_recommendations, tab_export = st.tabs(
     [
         "Opis projektu",
         "Dane",
         "Analiza sprzedaży",
         "Segmentacja RFM",
+        "Rekomendacje",
         "Eksport wyników",
     ]
 )
@@ -308,6 +310,84 @@ with tab_rfm:
                 """
             )        
 
+with tab_recommendations:
+    st.header("Rekomendacje decyzyjne")
+
+    if cleaned_sales_data is None:
+        st.warning("Brak danych do wygenerowania rekomendacji. Wgraj plik sprzedażowy lub użyj danych przykładowych.")
+    else:
+        st.write(
+            """
+            Ta sekcja prezentuje automatycznie wygenerowane rekomendacje biznesowe
+            na podstawie wyników analizy sprzedaży, rankingu produktów, sprzedaży
+            według krajów oraz segmentacji klientów metodą RFM.
+            """
+        )
+
+        kpis = calculate_sales_kpis(cleaned_sales_data)
+        top_products_data = top_products(cleaned_sales_data, limit=10)
+        country_data = sales_by_country(cleaned_sales_data)
+        rfm_data = rfm_analysis(cleaned_sales_data)
+
+        recommendations_data = generate_sales_recommendations(
+            kpis=kpis,
+            top_products_data=top_products_data,
+            country_data=country_data,
+            rfm_data=rfm_data,
+        )
+
+        high_priority_count = len(
+            recommendations_data[recommendations_data["Priorytet"] == "Wysoki"]
+        )
+        medium_priority_count = len(
+            recommendations_data[recommendations_data["Priorytet"] == "Średni"]
+        )
+        low_priority_count = len(
+            recommendations_data[recommendations_data["Priorytet"] == "Niski"]
+        )
+
+        col1, col2, col3, col4 = st.columns(4)
+
+        col1.metric("Liczba rekomendacji", len(recommendations_data))
+        col2.metric("Wysoki priorytet", high_priority_count)
+        col3.metric("Średni priorytet", medium_priority_count)
+        col4.metric("Niski priorytet", low_priority_count)
+
+        st.divider()
+
+        selected_priority = st.selectbox(
+            "Filtruj według priorytetu",
+            options=["Wszystkie", "Wysoki", "Średni", "Niski"],
+        )
+
+        if selected_priority != "Wszystkie":
+            displayed_recommendations = recommendations_data[
+                recommendations_data["Priorytet"] == selected_priority
+            ]
+        else:
+            displayed_recommendations = recommendations_data
+
+        for index, row in displayed_recommendations.iterrows():
+            with st.container(border=True):
+                st.subheader(f"{row['Obszar']} — priorytet: {row['Priorytet']}")
+                st.write(f"**Wniosek:** {row['Wniosek']}")
+                st.write(f"**Rekomendacja:** {row['Rekomendacja']}")
+
+        st.divider()
+
+        st.subheader("Tabela rekomendacji")
+
+        st.dataframe(recommendations_data, width="stretch")
+
+        st.info(
+            """
+            Rekomendacje mają charakter wspierający i powinny być interpretowane
+            przez analityka lub menedżera w kontekście rzeczywistej sytuacji
+            przedsiębiorstwa. System nie zastępuje decyzji biznesowej, lecz
+            wskazuje obszary wymagające uwagi.
+            """
+        )
+
 with tab_export:
     st.header("Eksport wyników analizy")
 
@@ -326,6 +406,13 @@ with tab_export:
         top_products_data = top_products(cleaned_sales_data, limit=10)
         country_data = sales_by_country(cleaned_sales_data)
         rfm_data = rfm_analysis(cleaned_sales_data)
+        kpis = calculate_sales_kpis(cleaned_sales_data)
+        recommendations_data = generate_sales_recommendations(
+            kpis=kpis,
+            top_products_data=top_products_data,
+            country_data=country_data,
+            rfm_data=rfm_data,
+        )  
 
         st.subheader("Dane po czyszczeniu")
 
@@ -375,6 +462,15 @@ with tab_export:
                 file_name="rfm_segmentation.csv",
                 mime="text/csv",
             )
+
+            st.subheader("Rekomendacje decyzyjne")
+
+        st.download_button(
+            label="Pobierz rekomendacje decyzyjne",
+            data=convert_dataframe_to_csv(recommendations_data),
+            file_name="business_recommendations.csv",
+            mime="text/csv",
+        )
 
         st.divider()
 
