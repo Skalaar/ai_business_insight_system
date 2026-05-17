@@ -203,3 +203,138 @@ def generate_sales_recommendations(
         )
 
     return pd.DataFrame(recommendations)
+
+def generate_combined_product_recommendations(
+    top_products_data: pd.DataFrame,
+    product_reviews_data: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Generuje rekomendacje na podstawie połączenia wyników analizy sprzedaży
+    oraz analizy opinii klientów.
+
+    Funkcja porównuje:
+    - wartość sprzedaży produktów,
+    - liczbę opinii,
+    - średnią ocenę,
+    - udział opinii pozytywnych i negatywnych.
+
+    Zwraca:
+        DataFrame z rekomendacjami produktowymi.
+    """
+    recommendations = []
+
+    if top_products_data.empty or product_reviews_data.empty:
+        return pd.DataFrame(
+            [
+                {
+                    "Produkt": "Brak danych",
+                    "Obszar": "Dane",
+                    "Priorytet": "Niski",
+                    "Wniosek": "Brakuje danych sprzedażowych lub tekstowych potrzebnych do wygenerowania rekomendacji produktowych.",
+                    "Rekomendacja": "Należy wczytać dane sprzedażowe oraz dane tekstowe zawierające opinie klientów dla produktów.",
+                }
+            ]
+        )
+
+    sales_products = top_products_data.copy()
+    reviews_products = product_reviews_data.copy()
+
+    merged_data = sales_products.merge(
+        reviews_products,
+        left_on="Description",
+        right_on="ProductName",
+        how="inner",
+    )
+
+    if merged_data.empty:
+        return pd.DataFrame(
+            [
+                {
+                    "Produkt": "Brak dopasowania",
+                    "Obszar": "Integracja danych",
+                    "Priorytet": "Średni",
+                    "Wniosek": "Nie znaleziono wspólnych produktów między danymi sprzedażowymi i opiniami klientów.",
+                    "Rekomendacja": "Należy zweryfikować spójność nazw produktów lub zastosować wspólny identyfikator produktu, np. ProductID/StockCode.",
+                }
+            ]
+        )
+
+    revenue_median = merged_data["Revenue"].median()
+    rating_median = merged_data["AverageRating"].median()
+
+    for _, row in merged_data.iterrows():
+        product_name = row["Description"]
+        revenue = row["Revenue"]
+        average_rating = row["AverageRating"]
+        reviews = row["Reviews"]
+        negative_share = row["NegativeShare"]
+        positive_share = row["PositiveShare"]
+
+        if revenue >= revenue_median and negative_share >= 0.30:
+            recommendations.append(
+                {
+                    "Produkt": product_name,
+                    "Obszar": "Jakość produktu",
+                    "Priorytet": "Wysoki",
+                    "Wniosek": (
+                        f"Produkt osiąga relatywnie wysoką sprzedaż ({revenue:,.2f}), "
+                        f"ale udział opinii negatywnych wynosi {negative_share:.1%}."
+                    ),
+                    "Rekomendacja": "Rekomendowana jest kontrola jakości produktu oraz analiza treści negatywnych opinii klientów.",
+                }
+            )
+
+        if revenue < revenue_median and average_rating >= rating_median and positive_share >= 0.70:
+            recommendations.append(
+                {
+                    "Produkt": product_name,
+                    "Obszar": "Potencjał sprzedażowy",
+                    "Priorytet": "Średni",
+                    "Wniosek": (
+                        f"Produkt ma relatywnie niższą sprzedaż ({revenue:,.2f}), "
+                        f"ale wysoką średnią ocenę ({average_rating:.2f}) i udział opinii pozytywnych {positive_share:.1%}."
+                    ),
+                    "Rekomendacja": "Warto rozważyć zwiększenie widoczności produktu, kampanię promocyjną lub rekomendowanie go klientom w sklepie internetowym.",
+                }
+            )
+
+        if reviews >= 2 and average_rating <= 2.5:
+            recommendations.append(
+                {
+                    "Produkt": product_name,
+                    "Obszar": "Ryzyko niezadowolenia klientów",
+                    "Priorytet": "Wysoki",
+                    "Wniosek": (
+                        f"Produkt posiada niską średnią ocenę ({average_rating:.2f}) "
+                        f"na podstawie {reviews} opinii."
+                    ),
+                    "Rekomendacja": "Należy przeanalizować przyczyny niskiej oceny oraz rozważyć poprawę produktu, opisu oferty lub procesu obsługi klienta.",
+                }
+            )
+
+        if revenue >= revenue_median and positive_share >= 0.80:
+            recommendations.append(
+                {
+                    "Produkt": product_name,
+                    "Obszar": "Produkt strategiczny",
+                    "Priorytet": "Średni",
+                    "Wniosek": (
+                        f"Produkt łączy wysoką sprzedaż ({revenue:,.2f}) "
+                        f"z wysokim udziałem opinii pozytywnych ({positive_share:.1%})."
+                    ),
+                    "Rekomendacja": "Produkt może zostać wykorzystany jako element kampanii sprzedażowej lub jako punkt odniesienia dla rozwoju podobnych produktów.",
+                }
+            )
+
+    if not recommendations:
+        recommendations.append(
+            {
+                "Produkt": "Ogół produktów",
+                "Obszar": "Analiza łączona",
+                "Priorytet": "Niski",
+                "Wniosek": "Nie wykryto istotnych zależności wymagających natychmiastowej reakcji decyzyjnej.",
+                "Rekomendacja": "Należy kontynuować monitorowanie sprzedaży i opinii klientów oraz przeprowadzić analizę na większym zbiorze danych.",
+            }
+        )
+
+    return pd.DataFrame(recommendations)

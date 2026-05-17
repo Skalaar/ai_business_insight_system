@@ -17,7 +17,10 @@ from src.sales_analysis import (
     sales_by_country,
     top_products,
 )
-from src.recommendations import generate_sales_recommendations
+from src.recommendations import (
+    generate_combined_product_recommendations,
+    generate_sales_recommendations,
+)
 from src.text_analysis import (
     clean_review_data,
     product_review_summary,
@@ -646,7 +649,7 @@ with tab_recommendations:
     st.header("Rekomendacje decyzyjne")
 
     if cleaned_sales_data is None:
-        st.warning("Brak danych do wygenerowania rekomendacji. Wgraj plik sprzedażowy lub użyj danych przykładowych.")
+        st.warning("Brak danych sprzedażowych do wygenerowania rekomendacji. Wgraj plik sprzedażowy lub użyj danych przykładowych.")
     else:
         st.write(
             """
@@ -707,9 +710,58 @@ with tab_recommendations:
 
         st.divider()
 
-        st.subheader("Tabela rekomendacji")
+        st.subheader("Tabela rekomendacji sprzedażowych")
 
         st.dataframe(recommendations_data, width="stretch")
+
+        st.divider()
+
+        st.subheader("Rekomendacje łączące sprzedaż i opinie klientów")
+
+        if cleaned_review_data is None:
+            st.warning(
+                "Brak danych tekstowych. Aby wygenerować rekomendacje łączone, wgraj plik z opiniami lub użyj danych przykładowych."
+            )
+        else:
+            product_reviews_data = product_review_summary(cleaned_review_data)
+
+            combined_recommendations_data = generate_combined_product_recommendations(
+                top_products_data=top_products_data,
+                product_reviews_data=product_reviews_data,
+            )
+
+            combined_high_priority_count = len(
+                combined_recommendations_data[
+                    combined_recommendations_data["Priorytet"] == "Wysoki"
+                ]
+            )
+
+            col1, col2 = st.columns(2)
+
+            col1.metric("Liczba rekomendacji łączonych", len(combined_recommendations_data))
+            col2.metric("Rekomendacje wysokiego priorytetu", combined_high_priority_count)
+
+            selected_combined_priority = st.selectbox(
+                "Filtruj rekomendacje łączone według priorytetu",
+                options=["Wszystkie", "Wysoki", "Średni", "Niski"],
+            )
+
+            if selected_combined_priority != "Wszystkie":
+                displayed_combined_recommendations = combined_recommendations_data[
+                    combined_recommendations_data["Priorytet"] == selected_combined_priority
+                ]
+            else:
+                displayed_combined_recommendations = combined_recommendations_data
+
+            for _, row in displayed_combined_recommendations.iterrows():
+                with st.container(border=True):
+                    st.subheader(f"{row['Produkt']} — {row['Obszar']}")
+                    st.write(f"**Priorytet:** {row['Priorytet']}")
+                    st.write(f"**Wniosek:** {row['Wniosek']}")
+                    st.write(f"**Rekomendacja:** {row['Rekomendacja']}")
+
+            st.subheader("Tabela rekomendacji łączonych")
+            st.dataframe(combined_recommendations_data, width="stretch")
 
         st.info(
             """
@@ -746,6 +798,15 @@ with tab_export:
             rfm_data=rfm_data,
         )  
 
+        if cleaned_review_data is not None:
+            product_reviews_data = product_review_summary(cleaned_review_data)
+            combined_recommendations_data = generate_combined_product_recommendations(
+                top_products_data=top_products_data,
+                product_reviews_data=product_reviews_data,
+            )
+        else:
+            combined_recommendations_data = None
+
         st.subheader("Dane po czyszczeniu")
 
         st.download_button(
@@ -754,6 +815,13 @@ with tab_export:
             file_name="cleaned_sales_data.csv",
             mime="text/csv",
         )
+        if combined_recommendations_data is not None:
+            st.download_button(
+                label="Pobierz rekomendacje łączące sprzedaż i opinie",
+                data=convert_dataframe_to_csv(combined_recommendations_data),
+                file_name="combined_product_recommendations.csv",
+                mime="text/csv",
+            )
 
         st.subheader("Wyniki analizy sprzedaży")
 
