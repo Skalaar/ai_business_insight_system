@@ -35,6 +35,7 @@ from src.sentiment_models import (
     sentiment_comparison_summary,
     train_tfidf_logistic_regression_model,
 )
+from src.filters import filter_review_data, filter_sales_data
 
 st.set_page_config(
     page_title="AI Business Insight System",
@@ -108,42 +109,102 @@ use_sample_review_data = st.sidebar.checkbox(
 
 try:
     if uploaded_sales_file is not None:
-        raw_sales_data, cleaned_sales_data = process_uploaded_sales_file(uploaded_sales_file)
+        raw_sales_data, filtered_sales_data = process_uploaded_sales_file(uploaded_sales_file)
         sales_data_source_description = f"Plik użytkownika: {uploaded_sales_file.name}"
     elif use_sample_sales_data:
-        raw_sales_data, cleaned_sales_data = get_sample_sales_data()
+        raw_sales_data, filtered_sales_data = get_sample_sales_data()
         # sales_data_source_description = "Dane przykładowe: data/sample/sample_sales.csv"
         sales_data_source_description = "Dane przykładowe: data/sample/generated_sales.csv"
     else:
         raw_sales_data = None
-        cleaned_sales_data = None
+        filtered_sales_data = None
         sales_data_source_description = "Nie wybrano źródła danych sprzedażowych"
 
 except Exception as error:
     raw_sales_data = None
-    cleaned_sales_data = None
+    filtered_sales_data = None
     sales_data_source_description = "Błąd wczytywania danych sprzedażowych"
     st.sidebar.error(f"Błąd danych sprzedażowych: {error}")
 
 
 try:
     if uploaded_review_file is not None:
-        raw_review_data, cleaned_review_data = process_uploaded_review_file(uploaded_review_file)
+        raw_review_data, filtered_review_data = process_uploaded_review_file(uploaded_review_file)
         review_data_source_description = f"Plik użytkownika: {uploaded_review_file.name}"
     elif use_sample_review_data:
-        raw_review_data, cleaned_review_data = get_sample_review_data()
+        raw_review_data, filtered_review_data = get_sample_review_data()
         # review_data_source_description = "Dane przykładowe: data/sample/sample_reviews.csv"
         review_data_source_description = "Dane przykładowe: data/sample/generated_reviews.csv"
     else:
         raw_review_data = None
-        cleaned_review_data = None
+        filtered_review_data = None
         review_data_source_description = "Nie wybrano źródła danych tekstowych"
 
 except Exception as error:
     raw_review_data = None
-    cleaned_review_data = None
+    filtered_review_data = None
     review_data_source_description = "Błąd wczytywania danych tekstowych"
     st.sidebar.error(f"Błąd danych tekstowych: {error}")
+
+st.sidebar.divider()
+st.sidebar.header("Filtry analizy")
+
+filtered_sales_data = filtered_sales_data
+filtered_review_data = filtered_review_data
+
+if filtered_sales_data is not None:
+    min_date = filtered_sales_data["InvoiceDate"].dt.date.min()
+    max_date = filtered_sales_data["InvoiceDate"].dt.date.max()
+
+    selected_date_range = st.sidebar.date_input(
+        "Zakres dat sprzedaży",
+        value=(min_date, max_date),
+        min_value=min_date,
+        max_value=max_date,
+    )
+
+    available_countries = sorted(filtered_sales_data["Country"].dropna().unique().tolist())
+
+    selected_countries = st.sidebar.multiselect(
+        "Kraje",
+        options=available_countries,
+        default=[],
+    )
+
+    available_products = sorted(filtered_sales_data["Description"].dropna().unique().tolist())
+
+    selected_products = st.sidebar.multiselect(
+        "Produkty",
+        options=available_products,
+        default=[],
+    )
+
+    filtered_sales_data = filter_sales_data(
+        filtered_sales_data,
+        date_range=selected_date_range,
+        countries=selected_countries,
+        products=selected_products,
+    )
+
+if filtered_review_data is not None:
+    if filtered_sales_data is not None and not filtered_sales_data.empty:
+        selected_review_products = sorted(
+            filtered_sales_data["Description"].dropna().unique().tolist()
+        )
+    else:
+        selected_review_products = None
+
+    selected_sentiments = st.sidebar.multiselect(
+        "Sentyment opinii",
+        options=["Pozytywny", "Neutralny", "Negatywny"],
+        default=[],
+    )
+
+    filtered_review_data = filter_review_data(
+        filtered_review_data,
+        products=selected_review_products,
+        sentiments=selected_sentiments,
+    )
 
 
 tab_intro, tab_data, tab_sales, tab_rfm, tab_reviews, tab_ml, tab_recommendations, tab_export = st.tabs(
@@ -206,7 +267,7 @@ with tab_intro:
 with tab_data:
     st.header("Dane sprzedażowe")
 
-    if raw_sales_data is None or cleaned_sales_data is None:
+    if raw_sales_data is None or filtered_sales_data is None:
         st.warning("Nie wczytano danych. Wgraj plik w panelu bocznym lub zaznacz użycie danych przykładowych.")
     else:
         st.success(f"Źródło danych: {sales_data_source_description}")
@@ -215,21 +276,23 @@ with tab_data:
         st.dataframe(raw_sales_data, width="stretch")
 
         st.subheader("Podgląd danych po czyszczeniu")
-        st.dataframe(cleaned_sales_data, width="stretch")
+        st.dataframe(filtered_sales_data, width="stretch")
 
         col1, col2, col3 = st.columns(3)
         col1.metric("Liczba rekordów surowych", len(raw_sales_data))
-        col2.metric("Liczba rekordów po czyszczeniu", len(cleaned_sales_data))
-        col3.metric("Liczba kolumn", cleaned_sales_data.shape[1])
+        col2.metric("Liczba rekordów po czyszczeniu", len(filtered_sales_data))
+        col3.metric("Liczba kolumn", filtered_sales_data.shape[1])
+
+        st.metric("Liczba rekordów sprzedażowych po zastosowaniu filtrów", len(filtered_sales_data))
 
 
 with tab_sales:
     st.header("Analiza sprzedaży")
 
-    if cleaned_sales_data is None:
+    if filtered_sales_data is None:
         st.warning("Brak danych do analizy. Wgraj plik sprzedażowy lub użyj danych przykładowych.")
     else:
-        kpis = calculate_sales_kpis(cleaned_sales_data)
+        kpis = calculate_sales_kpis(filtered_sales_data)
 
         col1, col2, col3, col4, col5 = st.columns(5)
 
@@ -242,7 +305,7 @@ with tab_sales:
         st.divider()
 
         st.subheader("Sprzedaż w czasie")
-        monthly_data = monthly_sales(cleaned_sales_data)
+        monthly_data = monthly_sales(filtered_sales_data)
 
         fig_monthly = px.line(
             monthly_data,
@@ -258,7 +321,7 @@ with tab_sales:
         st.divider()
 
         st.subheader("Najlepiej sprzedające się produkty")
-        top_products_data = top_products(cleaned_sales_data, limit=10)
+        top_products_data = top_products(filtered_sales_data, limit=10)
 
         fig_products = px.bar(
             top_products_data,
@@ -274,7 +337,7 @@ with tab_sales:
         st.divider()
 
         st.subheader("Sprzedaż według kraju")
-        country_data = sales_by_country(cleaned_sales_data)
+        country_data = sales_by_country(filtered_sales_data)
 
         fig_country = px.bar(
             country_data,
@@ -290,7 +353,7 @@ with tab_sales:
 
         st.subheader("Dane tekstowe — opinie klientów")
 
-        if raw_review_data is None or cleaned_review_data is None:
+        if raw_review_data is None or filtered_review_data is None:
             st.warning("Nie wczytano danych tekstowych. Wgraj plik z opiniami lub użyj danych przykładowych.")
         else:
             st.success(f"Źródło danych tekstowych: {review_data_source_description}")
@@ -299,17 +362,19 @@ with tab_sales:
             st.dataframe(raw_review_data, width="stretch")
 
             st.write("Podgląd opinii po czyszczeniu")
-            st.dataframe(cleaned_review_data, width="stretch")
+            st.dataframe(filtered_review_data, width="stretch")
 
             col1, col2, col3 = st.columns(3)
             col1.metric("Liczba opinii surowych", len(raw_review_data))
-            col2.metric("Liczba opinii po czyszczeniu", len(cleaned_review_data))
-            col3.metric("Liczba produktów z opiniami", cleaned_review_data["ProductName"].nunique())
+            col2.metric("Liczba opinii po czyszczeniu", len(filtered_review_data))
+            col3.metric("Liczba produktów z opiniami", filtered_review_data["ProductName"].nunique())
+
+            st.metric("Liczba opinii po zastosowaniu filtrów", len(filtered_review_data))
 
 with tab_rfm:
     st.header("Segmentacja klientów metodą RFM")
 
-    if cleaned_sales_data is None:
+    if filtered_sales_data is None:
         st.warning("Brak danych do analizy RFM. Wgraj plik sprzedażowy lub użyj danych przykładowych.")
     else:
         st.write(
@@ -321,7 +386,7 @@ with tab_rfm:
             """
         )
 
-        rfm_data = rfm_analysis(cleaned_sales_data)
+        rfm_data = rfm_analysis(filtered_sales_data)
 
         if rfm_data.empty:
             st.warning("Nie udało się wykonać analizy RFM, ponieważ brakuje danych o klientach.")
@@ -411,7 +476,7 @@ with tab_rfm:
 with tab_reviews:
     st.header("Analiza danych tekstowych — opinie klientów")
 
-    if cleaned_review_data is None:
+    if filtered_review_data is None:
         st.warning("Brak danych tekstowych do analizy. Wgraj plik z opiniami lub użyj danych przykładowych.")
     else:
         st.write(
@@ -423,7 +488,7 @@ with tab_reviews:
             """
         )
 
-        text_kpis = review_kpis(cleaned_review_data)
+        text_kpis = review_kpis(filtered_review_data)
 
         col1, col2, col3, col4 = st.columns(4)
 
@@ -436,7 +501,7 @@ with tab_reviews:
 
         st.subheader("Rozkład ocen klientów")
 
-        rating_data = rating_distribution(cleaned_review_data)
+        rating_data = rating_distribution(filtered_review_data)
 
         fig_ratings = px.bar(
             rating_data,
@@ -452,7 +517,7 @@ with tab_reviews:
 
         st.subheader("Rozkład sentymentu opinii")
 
-        sentiment_data = sentiment_distribution(cleaned_review_data)
+        sentiment_data = sentiment_distribution(filtered_review_data)
 
         fig_sentiment = px.pie(
             sentiment_data,
@@ -468,7 +533,7 @@ with tab_reviews:
 
         st.subheader("Najczęściej występujące słowa w opiniach")
 
-        top_words_data = top_review_words(cleaned_review_data, limit=20)
+        top_words_data = top_review_words(filtered_review_data, limit=20)
 
         if top_words_data.empty:
             st.warning("Brak słów do wyświetlenia.")
@@ -488,7 +553,7 @@ with tab_reviews:
 
         st.subheader("Podsumowanie opinii według produktów")
 
-        product_reviews_data = product_review_summary(cleaned_review_data)
+        product_reviews_data = product_review_summary(filtered_review_data)
 
         st.dataframe(product_reviews_data, width="stretch")
 
@@ -502,11 +567,11 @@ with tab_reviews:
         )
 
         if selected_sentiment != "Wszystkie":
-            displayed_reviews = cleaned_review_data[
-                cleaned_review_data["RatingSentiment"] == selected_sentiment
+            displayed_reviews = filtered_review_data[
+                filtered_review_data["RatingSentiment"] == selected_sentiment
             ]
         else:
-            displayed_reviews = cleaned_review_data
+            displayed_reviews = filtered_review_data
 
         st.dataframe(
             displayed_reviews[
@@ -524,7 +589,7 @@ with tab_reviews:
 with tab_ml:
     st.header("Model AI/ML — klasyfikacja sentymentu opinii")
 
-    if cleaned_review_data is None:
+    if filtered_review_data is None:
         st.warning("Brak danych tekstowych do trenowania modelu. Wgraj plik z opiniami lub użyj danych przykładowych.")
     else:
         st.write(
@@ -545,11 +610,11 @@ with tab_ml:
         )
 
         try:
-            model_results = train_tfidf_logistic_regression_model(cleaned_review_data)
+            model_results = train_tfidf_logistic_regression_model(filtered_review_data)
 
             trained_model = model_results["model"]
             predicted_reviews = predict_sentiment_for_reviews(
-                cleaned_review_data,
+                filtered_review_data,
                 trained_model,
             )
 
@@ -652,7 +717,7 @@ with tab_ml:
 with tab_recommendations:
     st.header("Rekomendacje decyzyjne")
 
-    if cleaned_sales_data is None:
+    if filtered_sales_data is None:
         st.warning("Brak danych sprzedażowych do wygenerowania rekomendacji. Wgraj plik sprzedażowy lub użyj danych przykładowych.")
     else:
         st.write(
@@ -663,10 +728,10 @@ with tab_recommendations:
             """
         )
 
-        kpis = calculate_sales_kpis(cleaned_sales_data)
-        top_products_data = top_products(cleaned_sales_data, limit=10)
-        country_data = sales_by_country(cleaned_sales_data)
-        rfm_data = rfm_analysis(cleaned_sales_data)
+        kpis = calculate_sales_kpis(filtered_sales_data)
+        top_products_data = top_products(filtered_sales_data, limit=10)
+        country_data = sales_by_country(filtered_sales_data)
+        rfm_data = rfm_analysis(filtered_sales_data)
 
         recommendations_data = generate_sales_recommendations(
             kpis=kpis,
@@ -722,12 +787,12 @@ with tab_recommendations:
 
         st.subheader("Rekomendacje łączące sprzedaż i opinie klientów")
 
-        if cleaned_review_data is None:
+        if filtered_review_data is None:
             st.warning(
                 "Brak danych tekstowych. Aby wygenerować rekomendacje łączone, wgraj plik z opiniami lub użyj danych przykładowych."
             )
         else:
-            product_reviews_data = product_review_summary(cleaned_review_data)
+            product_reviews_data = product_review_summary(filtered_review_data)
 
             combined_recommendations_data = generate_combined_product_recommendations(
                 top_products_data=top_products_data,
@@ -779,7 +844,7 @@ with tab_recommendations:
 with tab_export:
     st.header("Eksport wyników analizy")
 
-    if cleaned_sales_data is None:
+    if filtered_sales_data is None:
         st.warning("Brak danych do eksportu. Wgraj plik sprzedażowy lub użyj danych przykładowych.")
     else:
         st.write(
@@ -790,11 +855,11 @@ with tab_export:
             """
         )
 
-        monthly_data = monthly_sales(cleaned_sales_data)
-        top_products_data = top_products(cleaned_sales_data, limit=10)
-        country_data = sales_by_country(cleaned_sales_data)
-        rfm_data = rfm_analysis(cleaned_sales_data)
-        kpis = calculate_sales_kpis(cleaned_sales_data)
+        monthly_data = monthly_sales(filtered_sales_data)
+        top_products_data = top_products(filtered_sales_data, limit=10)
+        country_data = sales_by_country(filtered_sales_data)
+        rfm_data = rfm_analysis(filtered_sales_data)
+        kpis = calculate_sales_kpis(filtered_sales_data)
         recommendations_data = generate_sales_recommendations(
             kpis=kpis,
             top_products_data=top_products_data,
@@ -802,8 +867,8 @@ with tab_export:
             rfm_data=rfm_data,
         )  
 
-        if cleaned_review_data is not None:
-            product_reviews_data = product_review_summary(cleaned_review_data)
+        if filtered_review_data is not None:
+            product_reviews_data = product_review_summary(filtered_review_data)
             combined_recommendations_data = generate_combined_product_recommendations(
                 top_products_data=top_products_data,
                 product_reviews_data=product_reviews_data,
@@ -815,8 +880,8 @@ with tab_export:
 
         st.download_button(
             label="Pobierz dane po czyszczeniu CSV",
-            data=convert_dataframe_to_csv(cleaned_sales_data),
-            file_name="cleaned_sales_data.csv",
+            data=convert_dataframe_to_csv(filtered_sales_data),
+            file_name="filtered_sales_data.csv",
             mime="text/csv",
         )
         if combined_recommendations_data is not None:
