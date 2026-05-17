@@ -26,6 +26,12 @@ from src.text_analysis import (
     sentiment_distribution,
     top_review_words,
 )
+from src.sentiment_models import (
+    ml_sentiment_distribution,
+    predict_sentiment_for_reviews,
+    sentiment_comparison_summary,
+    train_tfidf_logistic_regression_model,
+)
 
 st.set_page_config(
     page_title="AI Business Insight System",
@@ -133,13 +139,14 @@ except Exception as error:
     st.sidebar.error(f"Błąd danych tekstowych: {error}")
 
 
-tab_intro, tab_data, tab_sales, tab_rfm, tab_reviews, tab_recommendations, tab_export = st.tabs(
+tab_intro, tab_data, tab_sales, tab_rfm, tab_reviews, tab_ml, tab_recommendations, tab_export = st.tabs(
     [
         "Opis projektu",
         "Dane",
         "Analiza sprzedaży",
         "Segmentacja RFM",
         "Analiza opinii",
+        "Model AI/ML",
         "Rekomendacje",
         "Eksport wyników",
     ]
@@ -506,6 +513,134 @@ with tab_reviews:
             ],
             width="stretch",
         )
+
+with tab_ml:
+    st.header("Model AI/ML — klasyfikacja sentymentu opinii")
+
+    if cleaned_review_data is None:
+        st.warning("Brak danych tekstowych do trenowania modelu. Wgraj plik z opiniami lub użyj danych przykładowych.")
+    else:
+        st.write(
+            """
+            W tej sekcji zastosowano model uczenia maszynowego do klasyfikacji
+            sentymentu opinii klientów. Tekst opinii został przekształcony do
+            reprezentacji liczbowej metodą TF-IDF, a następnie sklasyfikowany
+            za pomocą modelu Logistic Regression.
+            """
+        )
+
+        st.info(
+            """
+            Etykietą uczącą modelu jest sentyment wyznaczony na podstawie oceny
+            gwiazdkowej. Oznacza to, że oceny 1–2 traktowane są jako negatywne,
+            ocena 3 jako neutralna, a oceny 4–5 jako pozytywne.
+            """
+        )
+
+        try:
+            model_results = train_tfidf_logistic_regression_model(cleaned_review_data)
+
+            trained_model = model_results["model"]
+            predicted_reviews = predict_sentiment_for_reviews(
+                cleaned_review_data,
+                trained_model,
+            )
+
+            col1, col2, col3, col4 = st.columns(4)
+
+            col1.metric("Liczba opinii treningowych", model_results["train_size"])
+            col2.metric("Liczba opinii testowych", model_results["test_size"])
+            col3.metric("Liczba klas", len(model_results["classes"]))
+            col4.metric("Dokładność modelu", f"{model_results['accuracy']:.2%}")
+
+            st.divider()
+
+            st.subheader("Macierz pomyłek")
+
+            st.write(
+                """
+                Macierz pomyłek pokazuje, ile opinii z danej klasy rzeczywistej
+                zostało przypisanych przez model do poszczególnych klas predykcji.
+                """
+            )
+
+            st.dataframe(model_results["confusion_matrix"], width="stretch")
+
+            st.divider()
+
+            st.subheader("Raport klasyfikacji")
+
+            st.write(
+                """
+                Raport klasyfikacji prezentuje podstawowe miary jakości modelu,
+                takie jak precision, recall i f1-score dla poszczególnych klas.
+                """
+            )
+
+            st.dataframe(model_results["classification_report"], width="stretch")
+
+            st.divider()
+
+            st.subheader("Rozkład sentymentu przewidzianego przez model ML")
+
+            ml_distribution = ml_sentiment_distribution(predicted_reviews)
+
+            fig_ml_sentiment = px.pie(
+                ml_distribution,
+                names="MLSentiment",
+                values="Reviews",
+                title="Udział klas sentymentu przewidzianych przez model ML",
+            )
+
+            st.plotly_chart(fig_ml_sentiment, width="stretch")
+            st.dataframe(ml_distribution, width="stretch")
+
+            st.divider()
+
+            st.subheader("Porównanie metody bazowej i modelu ML")
+
+            comparison_data = sentiment_comparison_summary(predicted_reviews)
+
+            fig_comparison = px.bar(
+                comparison_data,
+                x="RatingSentiment",
+                y="Reviews",
+                color="MLSentiment",
+                barmode="group",
+                title="Porównanie sentymentu z oceny gwiazdkowej i modelu ML",
+            )
+
+            st.plotly_chart(fig_comparison, width="stretch")
+            st.dataframe(comparison_data, width="stretch")
+
+            st.divider()
+
+            st.subheader("Przykładowe predykcje modelu")
+
+            st.dataframe(
+                predicted_reviews[
+                    [
+                        "ProductName",
+                        "Rating",
+                        "RatingSentiment",
+                        "MLSentiment",
+                        "SentimentAgreement",
+                        "ReviewText",
+                    ]
+                ],
+                width="stretch",
+            )
+
+            st.info(
+                """
+                Wyniki modelu należy interpretować ostrożnie, szczególnie przy małym
+                zbiorze danych. W przypadku większej liczby opinii model może lepiej
+                nauczyć się zależności między treścią recenzji a sentymentem.
+                """
+            )
+
+        except Exception as error:
+            st.error(f"Nie udało się wytrenować modelu ML: {error}")
 
 with tab_recommendations:
     st.header("Rekomendacje decyzyjne")
