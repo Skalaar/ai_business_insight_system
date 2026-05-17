@@ -75,3 +75,101 @@ def sales_by_country(data: pd.DataFrame) -> pd.DataFrame:
     )
 
     return result
+
+def rfm_analysis(data: pd.DataFrame) -> pd.DataFrame:
+    """
+    Wykonuje segmentację klientów metodą RFM.
+
+    RFM:
+    - Recency: liczba dni od ostatniego zakupu klienta,
+    - Frequency: liczba unikalnych transakcji klienta,
+    - Monetary: łączna wartość zakupów klienta.
+
+    Zwraca:
+        DataFrame z metrykami RFM, punktacją oraz segmentem klienta.
+    """
+    rfm_data = data.dropna(subset=["CustomerID"]).copy()
+
+    if rfm_data.empty:
+        return pd.DataFrame(
+            columns=[
+                "CustomerID",
+                "Recency",
+                "Frequency",
+                "Monetary",
+                "R_Score",
+                "F_Score",
+                "M_Score",
+                "RFM_Score",
+                "Segment",
+            ]
+        )
+
+    reference_date = rfm_data["InvoiceDate"].max() + pd.Timedelta(days=1)
+
+    rfm = (
+        rfm_data.groupby("CustomerID", as_index=False)
+        .agg(
+            LastPurchaseDate=("InvoiceDate", "max"),
+            Frequency=("InvoiceNo", "nunique"),
+            Monetary=("TotalPrice", "sum"),
+        )
+    )
+
+    rfm["Recency"] = (reference_date - rfm["LastPurchaseDate"]).dt.days
+
+    rfm["R_Score"] = pd.qcut(
+        rfm["Recency"].rank(method="first"),
+        4,
+        labels=[4, 3, 2, 1],
+    ).astype(int)
+
+    rfm["F_Score"] = pd.qcut(
+        rfm["Frequency"].rank(method="first"),
+        4,
+        labels=[1, 2, 3, 4],
+    ).astype(int)
+
+    rfm["M_Score"] = pd.qcut(
+        rfm["Monetary"].rank(method="first"),
+        4,
+        labels=[1, 2, 3, 4],
+    ).astype(int)
+
+    rfm["RFM_Score"] = (
+        rfm["R_Score"].astype(str)
+        + rfm["F_Score"].astype(str)
+        + rfm["M_Score"].astype(str)
+    )
+
+    def assign_segment(row):
+        if row["R_Score"] >= 3 and row["F_Score"] >= 3 and row["M_Score"] >= 3:
+            return "Najlepsi klienci"
+        if row["R_Score"] >= 3 and row["F_Score"] >= 3:
+            return "Lojalni klienci"
+        if row["R_Score"] >= 3 and row["F_Score"] <= 2:
+            return "Nowi lub okazjonalni klienci"
+        if row["R_Score"] <= 2 and row["F_Score"] >= 3:
+            return "Klienci zagrożeni odejściem"
+        if row["M_Score"] >= 3 and row["R_Score"] <= 2:
+            return "Wartościowi nieaktywni klienci"
+        return "Pozostali klienci"
+
+    rfm["Segment"] = rfm.apply(assign_segment, axis=1)
+
+    rfm = rfm[
+        [
+            "CustomerID",
+            "LastPurchaseDate",
+            "Recency",
+            "Frequency",
+            "Monetary",
+            "R_Score",
+            "F_Score",
+            "M_Score",
+            "RFM_Score",
+            "Segment",
+        ]
+    ].sort_values(["M_Score", "F_Score", "R_Score"], ascending=False)
+
+    return rfm

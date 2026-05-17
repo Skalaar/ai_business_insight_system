@@ -8,10 +8,10 @@ from src.preprocessing import clean_sales_data
 from src.sales_analysis import (
     calculate_sales_kpis,
     monthly_sales,
+    rfm_analysis,
     sales_by_country,
     top_products,
 )
-
 
 st.set_page_config(
     page_title="AI Business Insight System",
@@ -71,14 +71,14 @@ except Exception as error:
     st.sidebar.error(f"Błąd danych: {error}")
 
 
-tab_intro, tab_data, tab_sales = st.tabs(
+tab_intro, tab_data, tab_sales, tab_rfm = st.tabs(
     [
         "Opis projektu",
         "Dane",
         "Analiza sprzedaży",
+        "Segmentacja RFM",
     ]
 )
-
 
 with tab_intro:
     st.header("Opis projektu")
@@ -199,3 +199,105 @@ with tab_sales:
 
         st.plotly_chart(fig_country, width="stretch")
         st.dataframe(country_data, width="stretch")
+
+with tab_rfm:
+    st.header("Segmentacja klientów metodą RFM")
+
+    if cleaned_sales_data is None:
+        st.warning("Brak danych do analizy RFM. Wgraj plik sprzedażowy lub użyj danych przykładowych.")
+    else:
+        st.write(
+            """
+            Segmentacja RFM pozwala ocenić klientów na podstawie aktualności zakupów,
+            częstotliwości transakcji oraz łącznej wartości zakupów. Dzięki temu
+            przedsiębiorstwo może identyfikować najcenniejszych klientów, klientów
+            lojalnych oraz grupy wymagające działań retencyjnych.
+            """
+        )
+
+        rfm_data = rfm_analysis(cleaned_sales_data)
+
+        if rfm_data.empty:
+            st.warning("Nie udało się wykonać analizy RFM, ponieważ brakuje danych o klientach.")
+        else:
+            col1, col2, col3 = st.columns(3)
+
+            col1.metric("Liczba klientów w RFM", rfm_data["CustomerID"].nunique())
+            col2.metric("Średnia wartość klienta", f"{rfm_data['Monetary'].mean():,.2f}")
+            col3.metric("Średnia liczba transakcji", f"{rfm_data['Frequency'].mean():,.2f}")
+
+            st.divider()
+
+            st.subheader("Liczba klientów w segmentach")
+
+            segment_counts = (
+                rfm_data.groupby("Segment", as_index=False)
+                .agg(Customers=("CustomerID", "nunique"))
+                .sort_values("Customers", ascending=False)
+            )
+
+            fig_segments = px.bar(
+                segment_counts,
+                x="Segment",
+                y="Customers",
+                title="Liczba klientów według segmentów RFM",
+            )
+
+            st.plotly_chart(fig_segments, width="stretch")
+            st.dataframe(segment_counts, width="stretch")
+
+            st.divider()
+
+            st.subheader("Wartość sprzedaży według segmentów")
+
+            segment_value = (
+                rfm_data.groupby("Segment", as_index=False)
+                .agg(
+                    Customers=("CustomerID", "nunique"),
+                    TotalValue=("Monetary", "sum"),
+                    AverageValue=("Monetary", "mean"),
+                    AverageFrequency=("Frequency", "mean"),
+                    AverageRecency=("Recency", "mean"),
+                )
+                .sort_values("TotalValue", ascending=False)
+            )
+
+            fig_segment_value = px.bar(
+                segment_value,
+                x="Segment",
+                y="TotalValue",
+                title="Łączna wartość zakupów według segmentów RFM",
+            )
+
+            st.plotly_chart(fig_segment_value, width="stretch")
+            st.dataframe(segment_value, width="stretch")
+
+            st.divider()
+
+            st.subheader("Tabela klientów RFM")
+
+            selected_segment = st.selectbox(
+                "Wybierz segment klientów",
+                options=["Wszystkie segmenty"] + sorted(rfm_data["Segment"].unique().tolist()),
+            )
+
+            if selected_segment != "Wszystkie segmenty":
+                displayed_rfm_data = rfm_data[rfm_data["Segment"] == selected_segment]
+            else:
+                displayed_rfm_data = rfm_data
+
+            st.dataframe(displayed_rfm_data, width="stretch")
+
+            st.divider()
+
+            st.subheader("Interpretacja biznesowa")
+
+            st.write(
+                """
+                Wyniki segmentacji RFM mogą zostać wykorzystane do podejmowania decyzji
+                dotyczących marketingu, sprzedaży i utrzymania klientów. Segment
+                „Najlepsi klienci” może być objęty programem lojalnościowym, segment
+                „Klienci zagrożeni odejściem” wymaga działań retencyjnych, natomiast
+                „Nowi lub okazjonalni klienci” mogą być adresatami kampanii aktywizujących.
+                """
+            )        
