@@ -49,3 +49,37 @@ def load_uploaded_sales_data(uploaded_file: BinaryIO) -> pd.DataFrame:
         raise ValueError("Obsługiwane są tylko pliki CSV, XLSX oraz XLS.")
 
     return data
+
+def load_review_data(file_path: str | Path) -> pd.DataFrame:
+    """
+    Wczytuje dane tekstowe z opiniami klientów z pliku CSV lub Excel.
+    """
+    file_path = Path(file_path)
+
+    if not file_path.exists():
+        raise FileNotFoundError(f"Nie znaleziono pliku: {file_path}")
+
+    if file_path.suffix.lower() == ".csv":
+        data = pd.read_csv(file_path)
+    elif file_path.suffix.lower() in [".xlsx", ".xls"]:
+        data = pd.read_excel(file_path)
+    else:
+        raise ValueError("Obsługiwane są tylko pliki CSV, XLSX oraz XLS.")
+
+    return data
+
+
+def load_uploaded_review_data(uploaded_file: BinaryIO) -> pd.DataFrame:
+    """
+    Wczytuje dane tekstowe z opiniami klientów przesłane przez interfejs Streamlit.
+    """
+    file_name = uploaded_file.name.lower()
+
+    if file_name.endswith(".csv"):
+        data = pd.read_csv(uploaded_file)
+    elif file_name.endswith((".xlsx", ".xls")):
+        data = pd.read_excel(uploaded_file)
+    else:
+        raise ValueError("Obsługiwane są tylko pliki CSV, XLSX oraz XLS.")
+
+    return data

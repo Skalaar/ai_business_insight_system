@@ -3,7 +3,12 @@ from pathlib import Path
 import plotly.express as px
 import streamlit as st
 
-from src.data_loader import load_sales_data, load_uploaded_sales_data
+from src.data_loader import (
+    load_review_data,
+    load_sales_data,
+    load_uploaded_review_data,
+    load_uploaded_sales_data,
+)
 from src.preprocessing import clean_sales_data
 from src.sales_analysis import (
     calculate_sales_kpis,
@@ -13,6 +18,14 @@ from src.sales_analysis import (
     top_products,
 )
 from src.recommendations import generate_sales_recommendations
+from src.text_analysis import (
+    clean_review_data,
+    product_review_summary,
+    rating_distribution,
+    review_kpis,
+    sentiment_distribution,
+    top_review_words,
+)
 
 st.set_page_config(
     page_title="AI Business Insight System",
@@ -26,6 +39,7 @@ st.subheader("Prototyp systemu wspierającego decyzje przedsiębiorstwa")
 
 
 SAMPLE_DATA_PATH = Path("data/sample/sample_sales.csv")
+SAMPLE_REVIEWS_PATH = Path("data/sample/sample_reviews.csv")
 
 
 @st.cache_data
@@ -34,10 +48,21 @@ def get_sample_sales_data():
     cleaned_data = clean_sales_data(raw_data)
     return raw_data, cleaned_data
 
+@st.cache_data
+def get_sample_review_data():
+    raw_data = load_review_data(SAMPLE_REVIEWS_PATH)
+    cleaned_data = clean_review_data(raw_data)
+    return raw_data, cleaned_data
+
 
 def process_uploaded_sales_file(uploaded_file):
     raw_data = load_uploaded_sales_data(uploaded_file)
     cleaned_data = clean_sales_data(raw_data)
+    return raw_data, cleaned_data
+
+def process_uploaded_review_file(uploaded_file):
+    raw_data = load_uploaded_review_data(uploaded_file)
+    cleaned_data = clean_review_data(raw_data)
     return raw_data, cleaned_data
 
 def convert_dataframe_to_csv(dataframe):
@@ -48,41 +73,73 @@ def convert_dataframe_to_csv(dataframe):
 
 st.sidebar.header("Źródło danych")
 
-uploaded_file = st.sidebar.file_uploader(
+uploaded_sales_file = st.sidebar.file_uploader(
     "Wgraj plik sprzedażowy CSV/XLSX",
     type=["csv", "xlsx", "xls"],
 )
 
-use_sample_data = st.sidebar.checkbox(
-    "Użyj danych przykładowych",
+use_sample_sales_data = st.sidebar.checkbox(
+    "Użyj przykładowych danych sprzedażowych",
+    value=True,
+)
+
+st.sidebar.divider()
+
+uploaded_review_file = st.sidebar.file_uploader(
+    "Wgraj plik z opiniami CSV/XLSX",
+    type=["csv", "xlsx", "xls"],
+)
+
+use_sample_review_data = st.sidebar.checkbox(
+    "Użyj przykładowych opinii klientów",
     value=True,
 )
 
 try:
-    if uploaded_file is not None:
-        raw_sales_data, cleaned_sales_data = process_uploaded_sales_file(uploaded_file)
-        data_source_description = f"Plik użytkownika: {uploaded_file.name}"
-    elif use_sample_data:
+    if uploaded_sales_file is not None:
+        raw_sales_data, cleaned_sales_data = process_uploaded_sales_file(uploaded_sales_file)
+        sales_data_source_description = f"Plik użytkownika: {uploaded_sales_file.name}"
+    elif use_sample_sales_data:
         raw_sales_data, cleaned_sales_data = get_sample_sales_data()
-        data_source_description = "Dane przykładowe: data/sample/sample_sales.csv"
+        sales_data_source_description = "Dane przykładowe: data/sample/sample_sales.csv"
     else:
         raw_sales_data = None
         cleaned_sales_data = None
-        data_source_description = "Nie wybrano źródła danych"
+        sales_data_source_description = "Nie wybrano źródła danych sprzedażowych"
 
 except Exception as error:
     raw_sales_data = None
     cleaned_sales_data = None
-    data_source_description = "Błąd wczytywania danych"
-    st.sidebar.error(f"Błąd danych: {error}")
+    sales_data_source_description = "Błąd wczytywania danych sprzedażowych"
+    st.sidebar.error(f"Błąd danych sprzedażowych: {error}")
 
 
-tab_intro, tab_data, tab_sales, tab_rfm, tab_recommendations, tab_export = st.tabs(
+try:
+    if uploaded_review_file is not None:
+        raw_review_data, cleaned_review_data = process_uploaded_review_file(uploaded_review_file)
+        review_data_source_description = f"Plik użytkownika: {uploaded_review_file.name}"
+    elif use_sample_review_data:
+        raw_review_data, cleaned_review_data = get_sample_review_data()
+        review_data_source_description = "Dane przykładowe: data/sample/sample_reviews.csv"
+    else:
+        raw_review_data = None
+        cleaned_review_data = None
+        review_data_source_description = "Nie wybrano źródła danych tekstowych"
+
+except Exception as error:
+    raw_review_data = None
+    cleaned_review_data = None
+    review_data_source_description = "Błąd wczytywania danych tekstowych"
+    st.sidebar.error(f"Błąd danych tekstowych: {error}")
+
+
+tab_intro, tab_data, tab_sales, tab_rfm, tab_reviews, tab_recommendations, tab_export = st.tabs(
     [
         "Opis projektu",
         "Dane",
         "Analiza sprzedaży",
         "Segmentacja RFM",
+        "Analiza opinii",
         "Rekomendacje",
         "Eksport wyników",
     ]
@@ -109,14 +166,21 @@ with tab_intro:
         """
     )
 
-    st.subheader("Aktualne źródło danych")
-    st.write(data_source_description)
+    st.subheader("Aktualne źródła danych")
+    st.write(f"**Dane sprzedażowe:** {sales_data_source_description}")
+    st.write(f"**Dane tekstowe:** {review_data_source_description}")
 
     st.subheader("Wymagany format danych sprzedażowych")
     st.write(
         """
         Plik sprzedażowy powinien zawierać następujące kolumny:
         """
+    )
+
+    st.subheader("Wymagany format danych tekstowych")
+    st.code(
+        "ReviewID, ProductID, ProductName, Rating, ReviewDate, ReviewText",
+        language="text",
     )
 
     st.code(
@@ -131,7 +195,7 @@ with tab_data:
     if raw_sales_data is None or cleaned_sales_data is None:
         st.warning("Nie wczytano danych. Wgraj plik w panelu bocznym lub zaznacz użycie danych przykładowych.")
     else:
-        st.success(f"Źródło danych: {data_source_description}")
+        st.success(f"Źródło danych: {sales_data_source_description}")
 
         st.subheader("Podgląd danych surowych")
         st.dataframe(raw_sales_data, width="stretch")
@@ -207,6 +271,26 @@ with tab_sales:
 
         st.plotly_chart(fig_country, width="stretch")
         st.dataframe(country_data, width="stretch")
+
+        st.divider()
+
+        st.subheader("Dane tekstowe — opinie klientów")
+
+        if raw_review_data is None or cleaned_review_data is None:
+            st.warning("Nie wczytano danych tekstowych. Wgraj plik z opiniami lub użyj danych przykładowych.")
+        else:
+            st.success(f"Źródło danych tekstowych: {review_data_source_description}")
+
+            st.write("Podgląd surowych opinii")
+            st.dataframe(raw_review_data, width="stretch")
+
+            st.write("Podgląd opinii po czyszczeniu")
+            st.dataframe(cleaned_review_data, width="stretch")
+
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Liczba opinii surowych", len(raw_review_data))
+            col2.metric("Liczba opinii po czyszczeniu", len(cleaned_review_data))
+            col3.metric("Liczba produktów z opiniami", cleaned_review_data["ProductName"].nunique())
 
 with tab_rfm:
     st.header("Segmentacja klientów metodą RFM")
@@ -309,6 +393,119 @@ with tab_rfm:
                 „Nowi lub okazjonalni klienci” mogą być adresatami kampanii aktywizujących.
                 """
             )        
+
+with tab_reviews:
+    st.header("Analiza danych tekstowych — opinie klientów")
+
+    if cleaned_review_data is None:
+        st.warning("Brak danych tekstowych do analizy. Wgraj plik z opiniami lub użyj danych przykładowych.")
+    else:
+        st.write(
+            """
+            Ta sekcja prezentuje analizę opinii klientów. Program wykonuje
+            podstawowe czyszczenie tekstu, analizuje rozkład ocen, klasyfikuje
+            sentyment opinii na podstawie ocen gwiazdkowych oraz identyfikuje
+            najczęściej występujące słowa.
+            """
+        )
+
+        text_kpis = review_kpis(cleaned_review_data)
+
+        col1, col2, col3, col4 = st.columns(4)
+
+        col1.metric("Liczba opinii", text_kpis["total_reviews"])
+        col2.metric("Średnia ocena", f"{text_kpis['average_rating']:.2f}")
+        col3.metric("Śr. długość opinii", f"{text_kpis['average_review_length']:.0f} znaków")
+        col4.metric("Produkty z opiniami", text_kpis["unique_products"])
+
+        st.divider()
+
+        st.subheader("Rozkład ocen klientów")
+
+        rating_data = rating_distribution(cleaned_review_data)
+
+        fig_ratings = px.bar(
+            rating_data,
+            x="Rating",
+            y="Reviews",
+            title="Liczba opinii według ocen gwiazdkowych",
+        )
+
+        st.plotly_chart(fig_ratings, width="stretch")
+        st.dataframe(rating_data, width="stretch")
+
+        st.divider()
+
+        st.subheader("Rozkład sentymentu opinii")
+
+        sentiment_data = sentiment_distribution(cleaned_review_data)
+
+        fig_sentiment = px.pie(
+            sentiment_data,
+            names="RatingSentiment",
+            values="Reviews",
+            title="Udział opinii pozytywnych, neutralnych i negatywnych",
+        )
+
+        st.plotly_chart(fig_sentiment, width="stretch")
+        st.dataframe(sentiment_data, width="stretch")
+
+        st.divider()
+
+        st.subheader("Najczęściej występujące słowa w opiniach")
+
+        top_words_data = top_review_words(cleaned_review_data, limit=20)
+
+        if top_words_data.empty:
+            st.warning("Brak słów do wyświetlenia.")
+        else:
+            fig_words = px.bar(
+                top_words_data,
+                x="Count",
+                y="Word",
+                orientation="h",
+                title="Najczęściej występujące słowa w opiniach",
+            )
+
+            st.plotly_chart(fig_words, width="stretch")
+            st.dataframe(top_words_data, width="stretch")
+
+        st.divider()
+
+        st.subheader("Podsumowanie opinii według produktów")
+
+        product_reviews_data = product_review_summary(cleaned_review_data)
+
+        st.dataframe(product_reviews_data, width="stretch")
+
+        st.divider()
+
+        st.subheader("Przykładowe opinie")
+
+        selected_sentiment = st.selectbox(
+            "Filtruj opinie według sentymentu",
+            options=["Wszystkie", "Pozytywny", "Neutralny", "Negatywny"],
+        )
+
+        if selected_sentiment != "Wszystkie":
+            displayed_reviews = cleaned_review_data[
+                cleaned_review_data["RatingSentiment"] == selected_sentiment
+            ]
+        else:
+            displayed_reviews = cleaned_review_data
+
+        st.dataframe(
+            displayed_reviews[
+                [
+                    "ProductName",
+                    "Rating",
+                    "RatingSentiment",
+                    "ReviewText",
+                    "CleanReviewText",
+                ]
+            ],
+            width="stretch",
+        )
 
 with tab_recommendations:
     st.header("Rekomendacje decyzyjne")
