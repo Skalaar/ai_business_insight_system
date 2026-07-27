@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.py[cod]
 
 # Virtual environment
 .venv/
@@ -26,3 +27,10 @@ Thumbs.db
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Pytest and coverage artifacts
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+.pytest_cache/

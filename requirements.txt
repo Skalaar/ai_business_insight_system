@@ -8,3 +8,5 @@ matplotlib
 statsmodels>=0.14.6,<0.15
 transformers>=4.53,<6
 torch>=2.2,<3
+pytest>=8,<9
+pytest-cov>=5,<7
