@@ -49,6 +49,11 @@ from src.model_interpretability import (
     explain_single_review,
 )
 from src.topic_modeling import build_topic_analysis
+from src.transformer_sentiment import (
+    DEFAULT_TRANSFORMER_MODEL,
+    evaluate_transformer_sentiment,
+    load_transformer_sentiment_resources,
+)
 
 st.set_page_config(
     page_title="AI Business Insight System",
@@ -177,6 +182,38 @@ def get_advanced_decision_results(
         weekly_data=weekly_data,
         future_forecast=future_forecast,
         trend_window_weeks=8,
+    )
+
+@st.cache_resource(show_spinner=False)
+def get_transformer_resources(
+    model_name: str,
+):
+    """
+    Ładuje i przechowuje model transformerowy.
+    """
+    return load_transformer_sentiment_resources(
+        model_name=model_name,
+    )
+
+
+@st.cache_data(show_spinner=False)
+def get_transformer_evaluation_results(
+    review_data,
+    model_name: str,
+    batch_size: int,
+):
+    """
+    Przeprowadza i przechowuje predykcje modelu BERT.
+    """
+    resources = get_transformer_resources(
+        model_name=model_name,
+    )
+
+    return evaluate_transformer_sentiment(
+        data=review_data,
+        resources=resources,
+        batch_size=batch_size,
+        max_length=256,
     )
 
 st.sidebar.header("Źródło danych")
@@ -312,6 +349,7 @@ if filtered_review_data is not None:
     tab_reviews,
     tab_ml,
     tab_model_comparison,
+    tab_transformer,
     tab_interpretability,
     tab_topics,
     tab_decision_center,
@@ -328,6 +366,7 @@ if filtered_review_data is not None:
         "Analiza opinii",
         "Model bazowy",
         "Porównanie modeli",
+        "Model transformerowy",
         "Interpretowalność AI",
         "Tematy opinii",
         "Centrum decyzji",
@@ -1220,6 +1259,495 @@ with tab_ml:
 
         except Exception as error:
             st.error(f"Nie udało się wytrenować modelu ML: {error}")
+
+with tab_transformer:
+    st.header(
+        "Transformerowy model analizy sentymentu"
+    )
+
+    st.write(
+        """
+        Moduł wykorzystuje gotowy model BERT dostrojony
+        do analizy opinii o produktach. Model przewiduje
+        ocenę od jednej do pięciu gwiazdek, która następnie
+        jest przekształcana na klasę sentymentu.
+        """
+    )
+
+    st.info(
+        """
+        Model nie jest trenowany na aktualnie wczytanym zbiorze.
+        Wykorzystuje wiedzę zdobytą podczas wcześniejszego
+        treningu na zewnętrznych opiniach produktowych.
+        """
+    )
+
+    if (
+        filtered_review_data is None
+        or filtered_review_data.empty
+    ):
+        st.warning(
+            "Brak danych tekstowych do analizy transformerowej."
+        )
+    else:
+        selected_transformer_batch_size = st.slider(
+            "Rozmiar partii przetwarzanych opinii",
+            min_value=4,
+            max_value=32,
+            value=16,
+            step=4,
+            help=(
+                "Mniejsza wartość zużywa mniej pamięci, "
+                "ale analiza może potrwać dłużej."
+            ),
+        )
+
+        run_transformer_analysis = st.checkbox(
+            "Uruchom model transformerowy",
+            value=False,
+            help=(
+                "Pierwsze uruchomienie wymaga pobrania "
+                "pliku modelu i może potrwać kilka minut."
+            ),
+        )
+
+        if not run_transformer_analysis:
+            st.info(
+                "Zaznacz pole powyżej, aby rozpocząć analizę."
+            )
+        else:
+            try:
+                with st.spinner(
+                    "Trwa ładowanie modelu BERT "
+                    "i analiza opinii..."
+                ):
+                    transformer_results = (
+                        get_transformer_evaluation_results(
+                            review_data=(
+                                filtered_review_data
+                            ),
+                            model_name=(
+                                DEFAULT_TRANSFORMER_MODEL
+                            ),
+                            batch_size=(
+                                selected_transformer_batch_size
+                            ),
+                        )
+                    )
+
+                    classical_results = (
+                        get_model_comparison_results(
+                            review_data=(
+                                filtered_review_data
+                            ),
+                            requested_folds=5,
+                        )
+                    )
+
+                transformer_metrics = (
+                    transformer_results[
+                        "metrics"
+                    ].iloc[0]
+                )
+
+                col1, col2, col3, col4 = st.columns(4)
+
+                col1.metric(
+                    "Accuracy sentymentu",
+                    (
+                        f"{transformer_metrics['SentimentAccuracy']:.2%}"
+                    ),
+                )
+
+                col2.metric(
+                    "Macro F1",
+                    (
+                        f"{transformer_metrics['F1Macro']:.2%}"
+                    ),
+                )
+
+                col3.metric(
+                    "MAE liczby gwiazdek",
+                    (
+                        f"{transformer_metrics['StarMAE']:.3f}"
+                    ),
+                )
+
+                col4.metric(
+                    "Urządzenie",
+                    transformer_results[
+                        "device_name"
+                    ],
+                )
+
+                col5, col6, col7, col8 = st.columns(4)
+
+                col5.metric(
+                    "Precision macro",
+                    (
+                        f"{transformer_metrics['PrecisionMacro']:.2%}"
+                    ),
+                )
+
+                col6.metric(
+                    "Recall macro",
+                    (
+                        f"{transformer_metrics['RecallMacro']:.2%}"
+                    ),
+                )
+
+                col7.metric(
+                    "Dokładna ocena gwiazdkowa",
+                    (
+                        f"{transformer_metrics['ExactStarAccuracy']:.2%}"
+                    ),
+                )
+
+                col8.metric(
+                    "Czas analizy",
+                    (
+                        f"{transformer_metrics['RuntimeSeconds']:.2f} s"
+                    ),
+                )
+
+                col9, col10 = st.columns(2)
+
+                col9.metric(
+                    "Ocena w granicy ±1 gwiazdki",
+                    (
+                        f"{transformer_metrics['WithinOneStarAccuracy']:.2%}"
+                    ),
+                )
+
+                col10.metric(
+                    "Przetworzone opinie",
+                    int(
+                        transformer_metrics["ReviewsProcessed"]
+                    ),
+                )
+
+                st.caption(
+                    "Model: "
+                    f"{transformer_results['model_name']}"
+                )
+
+                st.divider()
+
+                st.subheader(
+                    "Porównanie modelu klasycznego i BERT"
+                )
+
+                best_classical_row = (
+                    classical_results[
+                        "comparison_table"
+                    ].iloc[0]
+                )
+
+                transformer_comparison = pd.DataFrame(
+                    [
+                        {
+                            "Model": (
+                                classical_results[
+                                    "best_model_name"
+                                ]
+                            ),
+                            "ModelType": (
+                                "Klasyczny TF-IDF"
+                            ),
+                            "Accuracy": (
+                                best_classical_row[
+                                    "AccuracyMean"
+                                ]
+                            ),
+                            "F1Macro": (
+                                best_classical_row[
+                                    "F1MacroMean"
+                                ]
+                            ),
+                            "Evaluation": (
+                                classical_results[
+                                    "validation_strategy"
+                                ]
+                            ),
+                        },
+                        {
+                            "Model": "BERT",
+                            "ModelType": (
+                                "Transformer"
+                            ),
+                            "Accuracy": (
+                                transformer_metrics[
+                                    "SentimentAccuracy"
+                                ]
+                            ),
+                            "F1Macro": (
+                                transformer_metrics[
+                                    "F1Macro"
+                                ]
+                            ),
+                            "Evaluation": (
+                                "Predykcja modelem "
+                                "wytrenowanym zewnętrznie"
+                            ),
+                        },
+                    ]
+                )
+
+                st.dataframe(
+                    transformer_comparison.style.format(
+                        {
+                            "Accuracy": "{:.2%}",
+                            "F1Macro": "{:.2%}",
+                        }
+                    ),
+                    width="stretch",
+                )
+
+                comparison_plot_data = (
+                    transformer_comparison.melt(
+                        id_vars=[
+                            "Model",
+                            "ModelType",
+                        ],
+                        value_vars=[
+                            "Accuracy",
+                            "F1Macro",
+                        ],
+                        var_name="Metric",
+                        value_name="Score",
+                    )
+                )
+
+                transformer_comparison_figure = px.bar(
+                    comparison_plot_data,
+                    x="Model",
+                    y="Score",
+                    color="Metric",
+                    barmode="group",
+                    range_y=[0, 1],
+                    title=(
+                        "Porównanie jakości modeli"
+                    ),
+                )
+
+                st.plotly_chart(
+                    transformer_comparison_figure,
+                    width="stretch",
+                )
+
+                st.caption(
+                    """
+                    Procedury oceny modeli różnią się. Model klasyczny
+                    jest oceniany przez walidację krzyżową na bieżącym
+                    zbiorze, natomiast BERT został wytrenowany wcześniej
+                    na zewnętrznych danych i wykonuje bezpośrednią
+                    predykcję.
+                    """
+                )
+
+                st.divider()
+
+                st.subheader(
+                    "Macierz pomyłek modelu BERT"
+                )
+
+                transformer_confusion = (
+                    transformer_results[
+                        "confusion_matrix"
+                    ]
+                )
+
+                transformer_confusion_figure = px.imshow(
+                    transformer_confusion,
+                    text_auto=True,
+                    aspect="auto",
+                    title=(
+                        "Rzeczywisty i przewidywany sentyment"
+                    ),
+                )
+
+                transformer_confusion_figure.update_xaxes(
+                    side="top"
+                )
+
+                st.plotly_chart(
+                    transformer_confusion_figure,
+                    width="stretch",
+                )
+
+                st.dataframe(
+                    transformer_confusion,
+                    width="stretch",
+                )
+
+                st.divider()
+
+                st.subheader(
+                    "Raport klasyfikacji"
+                )
+
+                st.dataframe(
+                    transformer_results[
+                        "classification_report"
+                    ].style.format(
+                        {
+                            "precision": "{:.3f}",
+                            "recall": "{:.3f}",
+                            "f1-score": "{:.3f}",
+                            "support": "{:.0f}",
+                        }
+                    ),
+                    width="stretch",
+                )
+
+                st.divider()
+
+                st.subheader(
+                    "Rozkład predykcji transformerowych"
+                )
+
+                transformer_distribution_figure = px.bar(
+                    transformer_results[
+                        "predicted_distribution"
+                    ],
+                    x="TransformerSentiment",
+                    y="Reviews",
+                    title=(
+                        "Liczba opinii według "
+                        "przewidzianego sentymentu"
+                    ),
+                    text="Reviews",
+                )
+
+                st.plotly_chart(
+                    transformer_distribution_figure,
+                    width="stretch",
+                )
+
+                st.divider()
+
+                st.subheader(
+                    "Analiza błędnych predykcji"
+                )
+
+                transformer_errors = (
+                    transformer_results["errors"]
+                )
+
+                error_count = len(
+                    transformer_errors
+                )
+
+                error_share = (
+                    error_count
+                    / transformer_results[
+                        "number_of_reviews"
+                    ]
+                )
+
+                col1, col2, col3 = st.columns(3)
+
+                col1.metric(
+                    "Przetworzone opinie",
+                    transformer_results[
+                        "number_of_reviews"
+                    ],
+                )
+
+                col2.metric(
+                    "Błędne sentymenty",
+                    error_count,
+                )
+
+                col3.metric(
+                    "Odsetek błędów",
+                    f"{error_share:.2%}",
+                )
+
+                transformer_error_columns = [
+                    column
+                    for column in [
+                        "ProductName",
+                        "Rating",
+                        "RatingSentiment",
+                        "TransformerStars",
+                        "TransformerSentiment",
+                        "TransformerConfidence",
+                        "ReviewText",
+                    ]
+                    if column
+                    in transformer_errors.columns
+                ]
+
+                st.dataframe(
+                    transformer_errors[
+                        transformer_error_columns
+                    ].style.format(
+                        {
+                            "TransformerConfidence": (
+                                "{:.2%}"
+                            ),
+                        }
+                    ),
+                    width="stretch",
+                )
+
+                st.divider()
+
+                st.subheader(
+                    "Wszystkie predykcje modelu"
+                )
+
+                transformer_prediction_columns = [
+                    column
+                    for column in [
+                        "ProductName",
+                        "Rating",
+                        "RatingSentiment",
+                        "TransformerStars",
+                        "TransformerSentiment",
+                        "TransformerConfidence",
+                        "NegativeProbability",
+                        "NeutralProbability",
+                        "PositiveProbability",
+                        "SentimentAgreement",
+                        "ReviewText",
+                    ]
+                    if column
+                    in transformer_results[
+                        "predictions"
+                    ].columns
+                ]
+
+                st.dataframe(
+                    transformer_results[
+                        "predictions"
+                    ][
+                        transformer_prediction_columns
+                    ].style.format(
+                        {
+                            "TransformerConfidence": (
+                                "{:.2%}"
+                            ),
+                            "NegativeProbability": (
+                                "{:.2%}"
+                            ),
+                            "NeutralProbability": (
+                                "{:.2%}"
+                            ),
+                            "PositiveProbability": (
+                                "{:.2%}"
+                            ),
+                        }
+                    ),
+                    width="stretch",
+                )
+
+            except Exception as error:
+                st.error(
+                    "Nie udało się przeprowadzić "
+                    f"analizy transformerowej: {error}"
+                )
 
 with tab_interpretability:
     st.header("Interpretowalność modelu klasyfikacji sentymentu")
@@ -2899,6 +3427,17 @@ with tab_summary:
             ),
         },
         {
+            "Obszar": "Deep Learning / NLP",
+            "Metoda": (
+                "Pretrenowany transformer BERT dostrojony "
+                "do opinii produktowych i ocen 1–5"
+            ),
+            "Cel": (
+                "Porównanie klasycznych metod TF-IDF "
+                "z kontekstowym modelem językowym"
+            ),
+        },
+        {
             "Obszar": "Analiza tematów",
             "Metoda": (
                 "TF-IDF oraz Non-negative Matrix Factorization (NMF)"
@@ -3488,6 +4027,89 @@ with tab_export:
                     "Nie udało się przygotować eksportu centrum decyzji: "
                     f"{error}"
                 )
+
+        st.subheader("Model transformerowy BERT")
+
+prepare_transformer_export = st.checkbox(
+    "Przygotuj wyniki transformera do eksportu",
+    value=False,
+    key="prepare_transformer_export",
+)
+
+if prepare_transformer_export:
+    if (
+        filtered_review_data is None
+        or filtered_review_data.empty
+    ):
+        st.warning(
+            "Brak opinii do eksportu wyników BERT."
+        )
+    else:
+        try:
+            with st.spinner(
+                "Trwa przygotowywanie wyników modelu BERT..."
+            ):
+                export_transformer_results = (
+                    get_transformer_evaluation_results(
+                        review_data=(
+                            filtered_review_data
+                        ),
+                        model_name=(
+                            DEFAULT_TRANSFORMER_MODEL
+                        ),
+                        batch_size=16,
+                    )
+                )
+
+            col1, col2, col3 = st.columns(3)
+
+            with col1:
+                st.download_button(
+                    label="Pobierz metryki BERT",
+                    data=convert_dataframe_to_csv(
+                        export_transformer_results[
+                            "metrics"
+                        ]
+                    ),
+                    file_name=(
+                        "transformer_sentiment_metrics.csv"
+                    ),
+                    mime="text/csv",
+                )
+
+            with col2:
+                st.download_button(
+                    label="Pobierz predykcje BERT",
+                    data=convert_dataframe_to_csv(
+                        export_transformer_results[
+                            "predictions"
+                        ]
+                    ),
+                    file_name=(
+                        "transformer_sentiment_predictions.csv"
+                    ),
+                    mime="text/csv",
+                )
+
+            with col3:
+                st.download_button(
+                    label="Pobierz błędy BERT",
+                    data=convert_dataframe_to_csv(
+                        export_transformer_results[
+                            "errors"
+                        ]
+                    ),
+                    file_name=(
+                        "transformer_sentiment_errors.csv"
+                    ),
+                    mime="text/csv",
+                )
+
+        except Exception as error:
+            st.warning(
+                "Nie udało się przygotować eksportu BERT: "
+                f"{error}"
+            )
             
         st.divider()
 
