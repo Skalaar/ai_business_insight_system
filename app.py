@@ -37,6 +37,7 @@ from src.sentiment_models import (
     train_tfidf_logistic_regression_model,
 )
 from src.filters import filter_review_data, filter_sales_data
+from src.model_comparison import compare_sentiment_models
 
 st.set_page_config(
     page_title="AI Business Insight System",
@@ -83,6 +84,21 @@ def convert_dataframe_to_csv(dataframe):
     Konwertuje DataFrame do formatu CSV gotowego do pobrania w Streamlit.
     """
     return dataframe.to_csv(index=False).encode("utf-8-sig")
+
+@st.cache_resource(show_spinner=False)
+def get_model_comparison_results(
+    review_data,
+    requested_folds: int,
+):
+    """
+    Uruchamia porównanie modeli i zapisuje wynik w pamięci podręcznej,
+    aby benchmark nie był liczony ponownie przy każdej zmianie widoku.
+    """
+    return compare_sentiment_models(
+        data=review_data,
+        requested_folds=requested_folds,
+        random_state=42,
+    )
 
 st.sidebar.header("Źródło danych")
 
@@ -208,14 +224,26 @@ if filtered_review_data is not None:
     )
 
 
-tab_intro, tab_data, tab_sales, tab_rfm, tab_reviews, tab_ml, tab_recommendations, tab_summary, tab_export = st.tabs(
+(
+    tab_intro,
+    tab_data,
+    tab_sales,
+    tab_rfm,
+    tab_reviews,
+    tab_ml,
+    tab_model_comparison,
+    tab_recommendations,
+    tab_summary,
+    tab_export,
+) = st.tabs(
     [
         "Opis projektu",
         "Dane",
         "Analiza sprzedaży",
         "Segmentacja RFM",
         "Analiza opinii",
-        "Model AI/ML",
+        "Model bazowy",
+        "Porównanie modeli",
         "Rekomendacje",
         "Podsumowanie badania",
         "Eksport wyników",
@@ -843,6 +871,272 @@ with tab_recommendations:
             """
         )
 
+with tab_model_comparison:
+    st.header("Porównanie modeli klasyfikacji sentymentu")
+
+    st.write(
+        """
+        W tej części porównywane są cztery klasyczne algorytmy uczenia
+        maszynowego. Wszystkie modele korzystają z tej samej reprezentacji
+        TF-IDF, dzięki czemu różnice wyników można przypisać przede wszystkim
+        zastosowanemu klasyfikatorowi.
+        """
+    )
+
+    st.info(
+        """
+        Podstawą wyboru najlepszego modelu jest macro F1, które nadaje
+        jednakowe znaczenie każdej klasie sentymentu. Accuracy pozostaje
+        miarą pomocniczą.
+        """
+    )
+
+    if filtered_review_data is None or filtered_review_data.empty:
+        st.warning(
+            "Brak danych tekstowych do porównania modeli."
+        )
+    else:
+        requested_folds = st.slider(
+            "Liczba części walidacji krzyżowej",
+            min_value=3,
+            max_value=5,
+            value=5,
+            step=1,
+            help=(
+                "Dane zostaną podzielone na kilka części. "
+                "Każda część zostanie kolejno wykorzystana do testowania."
+            ),
+        )
+
+        try:
+            with st.spinner(
+                "Trwa trenowanie i porównywanie modeli..."
+            ):
+                benchmark_results = get_model_comparison_results(
+                    review_data=filtered_review_data,
+                    requested_folds=requested_folds,
+                )
+
+            comparison_table = benchmark_results[
+                "comparison_table"
+            ]
+
+            best_model_row = comparison_table.iloc[0]
+
+            col1, col2, col3, col4 = st.columns(4)
+
+            col1.metric(
+                "Najlepszy model",
+                benchmark_results["best_model_name"],
+            )
+
+            col2.metric(
+                "Macro F1",
+                f"{best_model_row['F1MacroMean']:.2%}",
+            )
+
+            col3.metric(
+                "Accuracy",
+                f"{best_model_row['AccuracyMean']:.2%}",
+            )
+
+            col4.metric(
+                "Liczba części walidacji",
+                benchmark_results["number_of_folds"],
+            )
+
+            st.caption(
+                "Strategia walidacji: "
+                f"{benchmark_results['validation_strategy']}"
+            )
+
+            st.divider()
+
+            st.subheader("Ranking modeli")
+
+            st.dataframe(
+                comparison_table.style.format(
+                    {
+                        "AccuracyMean": "{:.2%}",
+                        "AccuracyStd": "{:.2%}",
+                        "PrecisionMacroMean": "{:.2%}",
+                        "RecallMacroMean": "{:.2%}",
+                        "F1MacroMean": "{:.2%}",
+                        "F1MacroStd": "{:.2%}",
+                        "AverageFitTime": "{:.4f}",
+                    }
+                ),
+                width="stretch",
+            )
+
+            plot_data = comparison_table.melt(
+                id_vars=["Model"],
+                value_vars=[
+                    "AccuracyMean",
+                    "PrecisionMacroMean",
+                    "RecallMacroMean",
+                    "F1MacroMean",
+                ],
+                var_name="Metric",
+                value_name="Score",
+            )
+
+            metric_names = {
+                "AccuracyMean": "Accuracy",
+                "PrecisionMacroMean": "Precision macro",
+                "RecallMacroMean": "Recall macro",
+                "F1MacroMean": "F1 macro",
+            }
+
+            plot_data["Metric"] = plot_data[
+                "Metric"
+            ].replace(metric_names)
+
+            comparison_figure = px.bar(
+                plot_data,
+                x="Model",
+                y="Score",
+                color="Metric",
+                barmode="group",
+                title="Porównanie jakości modeli",
+                range_y=[0, 1],
+            )
+
+            st.plotly_chart(
+                comparison_figure,
+                width="stretch",
+            )
+
+            st.divider()
+
+            st.subheader(
+                "Macierz pomyłek najlepszego modelu"
+            )
+
+            confusion_data = benchmark_results[
+                "confusion_matrix"
+            ]
+
+            confusion_figure = px.imshow(
+                confusion_data,
+                text_auto=True,
+                aspect="auto",
+                title=(
+                    "Macierz pomyłek — "
+                    f"{benchmark_results['best_model_name']}"
+                ),
+            )
+
+            confusion_figure.update_xaxes(
+                side="top"
+            )
+
+            st.plotly_chart(
+                confusion_figure,
+                width="stretch",
+            )
+
+            st.dataframe(
+                confusion_data,
+                width="stretch",
+            )
+
+            st.divider()
+
+            st.subheader(
+                "Raport klasyfikacji najlepszego modelu"
+            )
+
+            st.dataframe(
+                benchmark_results[
+                    "classification_report"
+                ].style.format(
+                    {
+                        "precision": "{:.3f}",
+                        "recall": "{:.3f}",
+                        "f1-score": "{:.3f}",
+                        "support": "{:.0f}",
+                    }
+                ),
+                width="stretch",
+            )
+
+            st.divider()
+
+            st.subheader("Analiza błędów")
+
+            number_of_errors = len(
+                benchmark_results["errors"]
+            )
+
+            total_predictions = len(
+                benchmark_results["predictions"]
+            )
+
+            error_rate = (
+                number_of_errors / total_predictions
+                if total_predictions > 0
+                else 0
+            )
+
+            col1, col2, col3 = st.columns(3)
+
+            col1.metric(
+                "Liczba predykcji",
+                total_predictions,
+            )
+
+            col2.metric(
+                "Liczba błędów",
+                number_of_errors,
+            )
+
+            col3.metric(
+                "Odsetek błędów",
+                f"{error_rate:.2%}",
+            )
+
+            if benchmark_results["errors"].empty:
+                st.success(
+                    "Nie wykryto błędnych predykcji."
+                )
+            else:
+                error_columns = [
+                    column
+                    for column in [
+                        "ProductName",
+                        "Rating",
+                        "RatingSentiment",
+                        "PredictedSentiment",
+                        "ReviewText",
+                    ]
+                    if column
+                    in benchmark_results[
+                        "errors"
+                    ].columns
+                ]
+
+                st.dataframe(
+                    benchmark_results[
+                        "errors"
+                    ][error_columns],
+                    width="stretch",
+                )
+
+            st.info(
+                """
+                Analiza błędów pozwala ustalić, jakie typy opinii są
+                najtrudniejsze dla modelu. Szczególnie istotne są recenzje
+                mieszane, niejednoznaczne oraz takie, w których tekst nie
+                odpowiada bezpośrednio ocenie gwiazdkowej.
+                """
+            )
+
+        except Exception as error:
+            st.error(
+                "Nie udało się przeprowadzić porównania modeli: "
+                f"{error}"
+            )
 
 with tab_summary:
     st.header("Podsumowanie badania")
@@ -916,8 +1210,15 @@ with tab_summary:
         },
         {
             "Obszar": "AI/ML",
-            "Metoda": "TF-IDF + Logistic Regression",
-            "Cel": "Klasyfikacja sentymentu opinii klientów na podstawie treści tekstowej",
+            "Metoda": (
+                "TF-IDF oraz porównanie Logistic Regression, Linear SVM, "
+                "Multinomial Naive Bayes i Complement Naive Bayes "
+                "z walidacją krzyżową"
+            ),
+            "Cel": (
+                "Wybór najskuteczniejszego modelu klasyfikacji sentymentu "
+                "oraz ocena jego zdolności generalizacji"
+            ),
         },
         {
             "Obszar": "Wsparcie decyzji",
@@ -934,27 +1235,60 @@ with tab_summary:
     st.subheader("Wyniki modelu AI/ML")
 
     if filtered_review_data is None or filtered_review_data.empty:
-        st.warning("Brak danych do oceny modelu AI/ML.")
+        st.warning("Brak danych do oceny modeli AI/ML.")
     else:
         try:
-            summary_model_results = train_tfidf_logistic_regression_model(filtered_review_data)
+            summary_benchmark_results = (
+                get_model_comparison_results(
+                    review_data=filtered_review_data,
+                    requested_folds=5,
+                )
+            )
 
-            col1, col2, col3 = st.columns(3)
+            summary_comparison_table = (
+                summary_benchmark_results[
+                    "comparison_table"
+                ]
+            )
 
-            col1.metric("Zbiór treningowy", summary_model_results["train_size"])
-            col2.metric("Zbiór testowy", summary_model_results["test_size"])
-            col3.metric("Dokładność modelu", f"{summary_model_results['accuracy']:.2%}")
+            summary_best_row = (
+                summary_comparison_table.iloc[0]
+            )
 
-            st.write(
-                """
-                Dokładność modelu oznacza odsetek opinii ze zbioru testowego,
-                dla których przewidywany sentyment był zgodny z etykietą
-                wyznaczoną na podstawie oceny gwiazdkowej.
-                """
+            col1, col2, col3, col4 = st.columns(4)
+
+            col1.metric(
+                "Najlepszy model",
+                summary_benchmark_results[
+                    "best_model_name"
+                ],
+            )
+
+            col2.metric(
+                "Accuracy",
+                f"{summary_best_row['AccuracyMean']:.2%}",
+            )
+
+            col3.metric(
+                "Macro F1",
+                f"{summary_best_row['F1MacroMean']:.2%}",
+            )
+
+            col4.metric(
+                "Walidacja",
+                (
+                    f"{summary_benchmark_results['number_of_folds']}"
+                    "-fold"
+                ),
+            )
+
+            st.caption(
+                "Strategia walidacji: "
+                f"{summary_benchmark_results['validation_strategy']}"
             )
 
         except Exception as error:
-            st.warning(f"Nie udało się obliczyć podsumowania modelu AI/ML: {error}")
+            st.warning("Nie udało się obliczyć podsumowania benchmarku: "f"{error}")
 
     st.divider()
 
@@ -1105,6 +1439,65 @@ with tab_export:
             file_name="business_recommendations.csv",
             mime="text/csv",
         )
+
+        st.subheader("Porównanie modeli AI/ML")
+
+        if filtered_review_data is None or filtered_review_data.empty:
+            st.warning(
+                "Brak danych tekstowych do eksportu benchmarku."
+            )
+        else:
+            try:
+                export_benchmark_results = (
+                    get_model_comparison_results(
+                        review_data=filtered_review_data,
+                        requested_folds=5,
+                    )
+                )
+
+                col1, col2, col3 = st.columns(3)
+
+                with col1:
+                    st.download_button(
+                        label="Pobierz ranking modeli",
+                        data=convert_dataframe_to_csv(
+                            export_benchmark_results[
+                                "comparison_table"
+                            ]
+                        ),
+                        file_name="sentiment_model_comparison.csv",
+                        mime="text/csv",
+                    )
+
+                with col2:
+                    st.download_button(
+                        label="Pobierz raport najlepszego modelu",
+                        data=convert_dataframe_to_csv(
+                            export_benchmark_results[
+                                "classification_report"
+                            ]
+                        ),
+                        file_name="best_model_classification_report.csv",
+                        mime="text/csv",
+                    )
+
+                with col3:
+                    st.download_button(
+                        label="Pobierz analizę błędów",
+                        data=convert_dataframe_to_csv(
+                            export_benchmark_results[
+                                "errors"
+                            ]
+                        ),
+                        file_name="best_model_error_analysis.csv",
+                        mime="text/csv",
+                    )
+
+            except Exception as error:
+                st.warning(
+                    "Nie udało się przygotować eksportu benchmarku: "
+                    f"{error}"
+                )
 
         st.divider()
 
