@@ -54,6 +54,9 @@ from src.transformer_sentiment import (
     evaluate_transformer_sentiment,
     load_transformer_sentiment_resources,
 )
+from src.drift_monitoring import (
+    build_drift_monitoring_analysis,
+)
 
 st.set_page_config(
     page_title="AI Business Insight System",
@@ -195,7 +198,6 @@ def get_transformer_resources(
         model_name=model_name,
     )
 
-
 @st.cache_data(show_spinner=False)
 def get_transformer_evaluation_results(
     review_data,
@@ -214,6 +216,22 @@ def get_transformer_evaluation_results(
         resources=resources,
         batch_size=batch_size,
         max_length=256,
+    )
+
+@st.cache_data(show_spinner=False)
+def get_drift_monitoring_results(
+    sales_data,
+    review_data,
+    window_weeks: int,
+):
+    """
+    Porównuje dwa kolejne okresy sprzedaży i opinii.
+    """
+    return build_drift_monitoring_analysis(
+        sales_data=sales_data,
+        review_data=review_data,
+        window_weeks=window_weeks,
+        top_terms=40,
     )
 
 st.sidebar.header("Źródło danych")
@@ -353,6 +371,7 @@ if filtered_review_data is not None:
     tab_interpretability,
     tab_topics,
     tab_decision_center,
+    tab_monitoring,
     tab_recommendations,
     tab_summary,
     tab_export,
@@ -370,6 +389,7 @@ if filtered_review_data is not None:
         "Interpretowalność AI",
         "Tematy opinii",
         "Centrum decyzji",
+        "Monitoring i drift",
         "Rekomendacje",
         "Podsumowanie badania",
         "Eksport wyników",
@@ -2525,6 +2545,425 @@ with tab_decision_center:
                 f"{error}"
             )
 
+with tab_monitoring:
+    st.header(
+        "Monitoring stabilności danych i wykrywanie driftu"
+    )
+
+    st.write(
+        """
+        Moduł porównuje dwa kolejne okresy o tej samej długości.
+        Pozwala wykryć zmiany struktury sprzedaży, zachowań klientów,
+        ocen, sentymentu oraz słownictwa używanego w opiniach.
+        """
+    )
+
+    st.info(
+        """
+        Wynik driftu mieści się w przedziale od 0 do 1.
+        Wartość poniżej 0,10 oznacza niski poziom zmian,
+        od 0,10 do 0,25 poziom średni, a od 0,25 poziom wysoki.
+        """
+    )
+
+    if (
+        filtered_sales_data is None
+        or filtered_sales_data.empty
+        or filtered_review_data is None
+        or filtered_review_data.empty
+    ):
+        st.warning(
+            "Monitoring wymaga jednocześnie danych "
+            "sprzedażowych i opinii klientów."
+        )
+    else:
+        selected_drift_window = st.slider(
+            "Długość każdego porównywanego okresu w tygodniach",
+            min_value=4,
+            max_value=16,
+            value=8,
+            step=2,
+        )
+
+        try:
+            with st.spinner(
+                "Trwa porównywanie okresów i obliczanie driftu..."
+            ):
+                drift_results = (
+                    get_drift_monitoring_results(
+                        sales_data=filtered_sales_data,
+                        review_data=filtered_review_data,
+                        window_weeks=selected_drift_window,
+                    )
+                )
+
+            drift_summary = drift_results[
+                "summary"
+            ]
+
+            col1, col2, col3, col4 = st.columns(4)
+
+            col1.metric(
+                "Ogólny wynik driftu",
+                (
+                    f"{drift_summary['OverallDriftScore']:.2%}"
+                ),
+            )
+
+            col2.metric(
+                "Poziom zmian",
+                drift_summary[
+                    "OverallSeverity"
+                ],
+            )
+
+            col3.metric(
+                "Liczba alertów",
+                drift_summary[
+                    "NumberOfAlerts"
+                ],
+            )
+
+            col4.metric(
+                "Alerty wysokiego poziomu",
+                drift_summary[
+                    "HighSeverityAlerts"
+                ],
+            )
+
+            col5, col6, col7, col8 = st.columns(4)
+
+            col5.metric(
+                "Sprzedaż — okres wcześniejszy",
+                drift_summary[
+                    "ReferenceSalesRecords"
+                ],
+            )
+
+            col6.metric(
+                "Sprzedaż — okres bieżący",
+                drift_summary[
+                    "CurrentSalesRecords"
+                ],
+            )
+
+            col7.metric(
+                "Opinie — okres wcześniejszy",
+                drift_summary[
+                    "ReferenceReviews"
+                ],
+            )
+
+            col8.metric(
+                "Opinie — okres bieżący",
+                drift_summary[
+                    "CurrentReviews"
+                ],
+            )
+
+            sales_windows = drift_results[
+                "sales_windows"
+            ]
+
+            review_windows = drift_results[
+                "review_windows"
+            ]
+
+            st.caption(
+                "Okres sprzedażowy referencyjny: "
+                f"{sales_windows['ReferenceStart'].date()} — "
+                f"{sales_windows['ReferenceEnd'].date()} | "
+                "okres bieżący: "
+                f"{sales_windows['CurrentStart'].date()} — "
+                f"{sales_windows['CurrentEnd'].date()}"
+            )
+
+            st.caption(
+                "Okres opinii referencyjny: "
+                f"{review_windows['ReferenceStart'].date()} — "
+                f"{review_windows['ReferenceEnd'].date()} | "
+                "okres bieżący: "
+                f"{review_windows['CurrentStart'].date()} — "
+                f"{review_windows['CurrentEnd'].date()}"
+            )
+
+            st.divider()
+
+            st.subheader("Wyniki monitorowanych wskaźników")
+
+            drift_components = drift_results[
+                "drift_components"
+            ]
+
+            st.dataframe(
+                drift_components.style.format(
+                    {
+                        "DriftScore": "{:.2%}",
+                        "ChangePct": (
+                            lambda value: (
+                                ""
+                                if pd.isna(value)
+                                else f"{value:.2f}%"
+                            )
+                        ),
+                    }
+                ),
+                width="stretch",
+            )
+
+            drift_ranking_figure = px.bar(
+                drift_components.sort_values(
+                    by="DriftScore",
+                    ascending=True,
+                ),
+                x="DriftScore",
+                y="Metric",
+                color="Severity",
+                orientation="h",
+                title=(
+                    "Ranking wykrytych zmian "
+                    "— wyższa wartość oznacza większy drift"
+                ),
+                range_x=[0, 1],
+            )
+
+            st.plotly_chart(
+                drift_ranking_figure,
+                width="stretch",
+            )
+
+            st.divider()
+
+            st.subheader("Alerty wymagające uwagi")
+
+            if drift_results["alerts"].empty:
+                st.success(
+                    "Nie wykryto zmian średniego "
+                    "ani wysokiego poziomu."
+                )
+            else:
+                st.dataframe(
+                    drift_results[
+                        "alerts"
+                    ].style.format(
+                        {
+                            "DriftScore": "{:.2%}",
+                            "ChangePct": (
+                                lambda value: (
+                                    ""
+                                    if pd.isna(value)
+                                    else f"{value:.2f}%"
+                                )
+                            ),
+                        }
+                    ),
+                    width="stretch",
+                )
+
+            st.divider()
+
+            st.subheader(
+                "Zmiana struktury przychodów produktów"
+            )
+
+            product_distribution = drift_results[
+                "product_distribution"
+            ]
+
+            product_plot_data = (
+                product_distribution.melt(
+                    id_vars=["Category"],
+                    value_vars=[
+                        "ReferenceShare",
+                        "CurrentShare",
+                    ],
+                    var_name="Period",
+                    value_name="Share",
+                )
+            )
+
+            product_period_names = {
+                "ReferenceShare": (
+                    "Okres wcześniejszy"
+                ),
+                "CurrentShare": (
+                    "Okres bieżący"
+                ),
+            }
+
+            product_plot_data["Period"] = (
+                product_plot_data[
+                    "Period"
+                ].replace(
+                    product_period_names
+                )
+            )
+
+            product_drift_figure = px.bar(
+                product_plot_data,
+                x="Category",
+                y="Share",
+                color="Period",
+                barmode="group",
+                title=(
+                    "Udział produktów w przychodzie "
+                    "w porównywanych okresach"
+                ),
+            )
+
+            product_drift_figure.update_xaxes(
+                tickangle=-30
+            )
+
+            st.plotly_chart(
+                product_drift_figure,
+                width="stretch",
+            )
+
+            st.dataframe(
+                product_distribution.style.format(
+                    {
+                        "ReferenceValue": "{:,.2f}",
+                        "CurrentValue": "{:,.2f}",
+                        "ReferenceShare": "{:.2%}",
+                        "CurrentShare": "{:.2%}",
+                        "ShareChange": "{:+.2%}",
+                    }
+                ),
+                width="stretch",
+            )
+
+            st.divider()
+
+            st.subheader(
+                "Zmiana rozkładu sentymentu"
+            )
+
+            sentiment_distribution = (
+                drift_results[
+                    "sentiment_distribution"
+                ]
+            )
+
+            sentiment_plot_data = (
+                sentiment_distribution.melt(
+                    id_vars=["Category"],
+                    value_vars=[
+                        "ReferenceShare",
+                        "CurrentShare",
+                    ],
+                    var_name="Period",
+                    value_name="Share",
+                )
+            )
+
+            sentiment_plot_data["Period"] = (
+                sentiment_plot_data[
+                    "Period"
+                ].replace(
+                    product_period_names
+                )
+            )
+
+            sentiment_drift_figure = px.bar(
+                sentiment_plot_data,
+                x="Category",
+                y="Share",
+                color="Period",
+                barmode="group",
+                title=(
+                    "Sentyment klientów "
+                    "w porównywanych okresach"
+                ),
+            )
+
+            st.plotly_chart(
+                sentiment_drift_figure,
+                width="stretch",
+            )
+
+            st.dataframe(
+                sentiment_distribution.style.format(
+                    {
+                        "ReferenceShare": "{:.2%}",
+                        "CurrentShare": "{:.2%}",
+                        "ShareChange": "{:+.2%}",
+                    }
+                ),
+                width="stretch",
+            )
+
+            st.divider()
+
+            st.subheader(
+                "Zmiany słownictwa opinii"
+            )
+
+            vocabulary_comparison = (
+                drift_results[
+                    "vocabulary_comparison"
+                ]
+            )
+
+            vocabulary_plot_data = (
+                vocabulary_comparison
+                .assign(
+                    AbsoluteChange=lambda frame: (
+                        frame["ShareChange"].abs()
+                    )
+                )
+                .nlargest(
+                    20,
+                    "AbsoluteChange",
+                )
+                .sort_values(
+                    by="ShareChange",
+                    ascending=True,
+                )
+            )
+
+            vocabulary_figure = px.bar(
+                vocabulary_plot_data,
+                x="ShareChange",
+                y="Term",
+                orientation="h",
+                title=(
+                    "Terminy o największej zmianie "
+                    "udziału w opiniach"
+                ),
+            )
+
+            st.plotly_chart(
+                vocabulary_figure,
+                width="stretch",
+            )
+
+            st.dataframe(
+                vocabulary_comparison.style.format(
+                    {
+                        "ReferenceShare": "{:.2%}",
+                        "CurrentShare": "{:.2%}",
+                        "ShareChange": "{:+.2%}",
+                    }
+                ),
+                width="stretch",
+            )
+
+            st.warning(
+                """
+                Drift nie oznacza automatycznie pogorszenia jakości.
+                Może wynikać z sezonowości, zmian oferty, kampanii,
+                wejścia na nowe rynki lub zmiany zachowań klientów.
+                Wykryty alert powinien zostać poddany interpretacji.
+                """
+            )
+
+        except Exception as error:
+            st.error(
+                "Nie udało się przygotować monitoringu driftu: "
+                f"{error}"
+            )
+
 with tab_recommendations:
     st.header("Rekomendacje decyzyjne")
 
@@ -3475,6 +3914,18 @@ with tab_summary:
             "Metoda": "Regułowy moduł rekomendacyjny",
             "Cel": "Generowanie rekomendacji biznesowych na podstawie danych sprzedażowych i tekstowych",
         },
+        {
+            "Obszar": "Monitoring modeli i danych",
+            "Metoda": (
+                "Porównanie kolejnych okien czasowych, "
+                "dywergencja Jensena-Shannona oraz analiza "
+                "zmian procentowych"
+            ),
+            "Cel": (
+                "Wykrywanie zmian struktury sprzedaży, "
+                "sentymentu, ocen i słownictwa opinii"
+            ),
+        },
     ]
 
     # st.dataframe(methods_data, width="stretch")
@@ -4028,6 +4479,71 @@ with tab_export:
                     f"{error}"
                 )
 
+        st.subheader("Monitoring danych i drift")
+
+        if (
+            filtered_sales_data is None
+            or filtered_sales_data.empty
+            or filtered_review_data is None
+            or filtered_review_data.empty
+        ):
+            st.warning(
+                "Brak danych wymaganych do eksportu monitoringu."
+            )
+        else:
+            try:
+                export_drift_results = (
+                    get_drift_monitoring_results(
+                        sales_data=filtered_sales_data,
+                        review_data=filtered_review_data,
+                        window_weeks=8,
+                    )
+                )
+
+                col1, col2, col3 = st.columns(3)
+
+                with col1:
+                    st.download_button(
+                        label="Pobierz wyniki driftu",
+                        data=convert_dataframe_to_csv(
+                            export_drift_results[
+                                "drift_components"
+                            ]
+                        ),
+                        file_name="data_drift_metrics.csv",
+                        mime="text/csv",
+                    )
+
+                with col2:
+                    st.download_button(
+                        label="Pobierz alerty driftu",
+                        data=convert_dataframe_to_csv(
+                            export_drift_results[
+                                "alerts"
+                            ]
+                        ),
+                        file_name="data_drift_alerts.csv",
+                        mime="text/csv",
+                    )
+
+                with col3:
+                    st.download_button(
+                        label="Pobierz zmianę słownictwa",
+                        data=convert_dataframe_to_csv(
+                            export_drift_results[
+                                "vocabulary_comparison"
+                            ]
+                        ),
+                        file_name="review_vocabulary_drift.csv",
+                        mime="text/csv",
+                    )
+
+            except Exception as error:
+                st.warning(
+                    "Nie udało się przygotować eksportu driftu: "
+                    f"{error}"
+                )
+                
         st.subheader("Model transformerowy BERT")
 
 prepare_transformer_export = st.checkbox(
