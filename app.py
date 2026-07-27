@@ -38,6 +38,10 @@ from src.sentiment_models import (
 )
 from src.filters import filter_review_data, filter_sales_data
 from src.model_comparison import compare_sentiment_models
+from src.model_interpretability import (
+    build_interpretability_analysis,
+    explain_single_review,
+)
 
 st.set_page_config(
     page_title="AI Business Insight System",
@@ -98,6 +102,20 @@ def get_model_comparison_results(
         data=review_data,
         requested_folds=requested_folds,
         random_state=42,
+    )
+
+@st.cache_resource(show_spinner=False)
+def get_interpretability_results(
+    review_data,
+    top_n: int,
+):
+    """
+    Trenuje i przechowuje model interpretowalny
+    oraz jego globalne wyjaśnienia.
+    """
+    return build_interpretability_analysis(
+        data=review_data,
+        top_n=top_n,
     )
 
 st.sidebar.header("Źródło danych")
@@ -232,6 +250,7 @@ if filtered_review_data is not None:
     tab_reviews,
     tab_ml,
     tab_model_comparison,
+    tab_interpretability,
     tab_recommendations,
     tab_summary,
     tab_export,
@@ -244,6 +263,7 @@ if filtered_review_data is not None:
         "Analiza opinii",
         "Model bazowy",
         "Porównanie modeli",
+        "Interpretowalność AI",
         "Rekomendacje",
         "Podsumowanie badania",
         "Eksport wyników",
@@ -744,6 +764,339 @@ with tab_ml:
         except Exception as error:
             st.error(f"Nie udało się wytrenować modelu ML: {error}")
 
+with tab_interpretability:
+    st.header("Interpretowalność modelu klasyfikacji sentymentu")
+
+    st.write(
+        """
+        Sekcja przedstawia globalne i lokalne wyjaśnienia działania
+        modelu TF-IDF + Logistic Regression. Model interpretowalny
+        nie zastępuje najlepszego modelu wybranego w benchmarku.
+        Pozwala jednak ustalić, jakie słowa i frazy wpływają
+        na klasyfikację sentymentu.
+        """
+    )
+
+    if filtered_review_data is None or filtered_review_data.empty:
+        st.warning(
+            "Brak danych tekstowych do interpretacji modelu."
+        )
+    else:
+        try:
+            with st.spinner(
+                "Trwa przygotowywanie wyjaśnień modelu..."
+            ):
+                interpretability_results = (
+                    get_interpretability_results(
+                        review_data=filtered_review_data,
+                        top_n=20,
+                    )
+                )
+
+                benchmark_for_interpretability = (
+                    get_model_comparison_results(
+                        review_data=filtered_review_data,
+                        requested_folds=5,
+                    )
+                )
+
+            col1, col2, col3, col4 = st.columns(4)
+
+            col1.metric(
+                "Najlepszy model predykcyjny",
+                benchmark_for_interpretability[
+                    "best_model_name"
+                ],
+            )
+
+            col2.metric(
+                "Model interpretowalny",
+                "Logistic Regression",
+            )
+
+            col3.metric(
+                "Liczba opinii",
+                interpretability_results[
+                    "number_of_reviews"
+                ],
+            )
+
+            col4.metric(
+                "Liczba cech TF-IDF",
+                interpretability_results[
+                    "number_of_features"
+                ],
+            )
+
+            st.info(
+                """
+                Dodatni współczynnik oznacza, że wystąpienie terminu
+                zwiększa wynik danej klasy. Im większa wartość
+                współczynnika, tym silniejsze globalne powiązanie
+                terminu z daną klasą sentymentu.
+                """
+            )
+
+            st.divider()
+
+            st.subheader("Globalna interpretacja modelu")
+
+            selected_interpretability_class = st.selectbox(
+                "Wybierz klasę sentymentu",
+                options=interpretability_results[
+                    "classes"
+                ],
+                key="interpretability_class",
+            )
+
+            selected_supporting_terms = (
+                interpretability_results[
+                    "supporting_terms"
+                ][
+                    interpretability_results[
+                        "supporting_terms"
+                    ]["Sentiment"]
+                    == selected_interpretability_class
+                ]
+                .sort_values(
+                    by="Coefficient",
+                    ascending=True,
+                )
+            )
+
+            supporting_figure = px.bar(
+                selected_supporting_terms,
+                x="Coefficient",
+                y="Term",
+                orientation="h",
+                title=(
+                    "Terminy najsilniej wspierające klasę: "
+                    f"{selected_interpretability_class}"
+                ),
+            )
+
+            st.plotly_chart(
+                supporting_figure,
+                width="stretch",
+            )
+
+            st.dataframe(
+                selected_supporting_terms.sort_values(
+                    by="Rank"
+                ).style.format(
+                    {
+                        "Coefficient": "{:.4f}",
+                    }
+                ),
+                width="stretch",
+            )
+
+            with st.expander(
+                "Pokaż terminy działające przeciw tej klasie"
+            ):
+                selected_opposing_terms = (
+                    interpretability_results[
+                        "opposing_terms"
+                    ][
+                        interpretability_results[
+                            "opposing_terms"
+                        ]["Sentiment"]
+                        == selected_interpretability_class
+                    ]
+                    .sort_values(
+                        by="Coefficient",
+                        ascending=False,
+                    )
+                )
+
+                opposing_figure = px.bar(
+                    selected_opposing_terms,
+                    x="Coefficient",
+                    y="Term",
+                    orientation="h",
+                    title=(
+                        "Terminy zmniejszające wynik klasy: "
+                        f"{selected_interpretability_class}"
+                    ),
+                )
+
+                st.plotly_chart(
+                    opposing_figure,
+                    width="stretch",
+                )
+
+                st.dataframe(
+                    selected_opposing_terms.sort_values(
+                        by="Rank"
+                    ).style.format(
+                        {
+                            "Coefficient": "{:.4f}",
+                        }
+                    ),
+                    width="stretch",
+                )
+
+            st.divider()
+
+            st.subheader(
+                "Lokalne wyjaśnienie pojedynczej opinii"
+            )
+
+            review_options = (
+                filtered_review_data
+                .reset_index(drop=True)
+            )
+
+            selected_review_position = st.selectbox(
+                "Wybierz opinię do wyjaśnienia",
+                options=range(len(review_options)),
+                format_func=lambda position: (
+                    f"{review_options.iloc[position].get('ProductName', 'Produkt')}"
+                    " — "
+                    f"{str(review_options.iloc[position].get('ReviewText', ''))[:90]}"
+                ),
+                key="interpretability_review",
+            )
+
+            selected_review = review_options.iloc[
+                selected_review_position
+            ]
+
+            local_explanation = explain_single_review(
+                model=interpretability_results["model"],
+                review_text=selected_review[
+                    "CleanReviewText"
+                ],
+                top_n=15,
+            )
+
+            actual_sentiment = selected_review[
+                "RatingSentiment"
+            ]
+
+            predicted_sentiment = local_explanation[
+                "predicted_sentiment"
+            ]
+
+            prediction_agreement = (
+                actual_sentiment
+                == predicted_sentiment
+            )
+
+            col1, col2, col3, col4 = st.columns(4)
+
+            col1.metric(
+                "Sentyment rzeczywisty",
+                actual_sentiment,
+            )
+
+            col2.metric(
+                "Predykcja modelu",
+                predicted_sentiment,
+            )
+
+            col3.metric(
+                "Pewność modelu",
+                f"{local_explanation['confidence']:.2%}",
+            )
+
+            col4.metric(
+                "Zgodność",
+                "Tak" if prediction_agreement else "Nie",
+            )
+
+            st.write("**Oryginalna treść opinii:**")
+
+            st.write(
+                selected_review.get(
+                    "ReviewText",
+                    selected_review["CleanReviewText"],
+                )
+            )
+
+            st.subheader(
+                "Prawdopodobieństwo poszczególnych klas"
+            )
+
+            probability_figure = px.bar(
+                local_explanation["probabilities"],
+                x="Sentiment",
+                y="Probability",
+                title="Rozkład prawdopodobieństw modelu",
+                range_y=[0, 1],
+            )
+
+            st.plotly_chart(
+                probability_figure,
+                width="stretch",
+            )
+
+            st.subheader(
+                "Wpływ terminów na predykcję"
+            )
+
+            if local_explanation[
+                "contributions"
+            ].empty:
+                st.warning(
+                    "W opinii nie znaleziono terminów "
+                    "obecnych w słowniku modelu."
+                )
+            else:
+                contribution_data = (
+                    local_explanation[
+                        "contributions"
+                    ]
+                    .sort_values(
+                        by="Contribution",
+                        ascending=True,
+                    )
+                )
+
+                contribution_figure = px.bar(
+                    contribution_data,
+                    x="Contribution",
+                    y="Term",
+                    orientation="h",
+                    title=(
+                        "Lokalny wpływ terminów na klasę: "
+                        f"{predicted_sentiment}"
+                    ),
+                )
+
+                st.plotly_chart(
+                    contribution_figure,
+                    width="stretch",
+                )
+
+                st.dataframe(
+                    local_explanation[
+                        "contributions"
+                    ].style.format(
+                        {
+                            "TFIDF": "{:.4f}",
+                            "Coefficient": "{:.4f}",
+                            "Contribution": "{:.4f}",
+                            "AbsoluteContribution": "{:.4f}",
+                        }
+                    ),
+                    width="stretch",
+                )
+
+            st.caption(
+                """
+                Lokalne wyjaśnienie dotyczy wyłącznie wybranej opinii.
+                Wpływ terminu jest obliczany jako iloczyn wartości
+                TF-IDF i współczynnika przypisanego do przewidzianej klasy.
+                """
+            )
+
+        except Exception as error:
+            st.error(
+                "Nie udało się przygotować interpretacji modelu: "
+                f"{error}"
+            )
+
 with tab_recommendations:
     st.header("Rekomendacje decyzyjne")
 
@@ -1221,6 +1574,17 @@ with tab_summary:
             ),
         },
         {
+            "Obszar": "Explainable AI",
+            "Metoda": (
+                "Globalna analiza współczynników Logistic Regression "
+                "oraz lokalna analiza wpływu terminów TF-IDF"
+            ),
+            "Cel": (
+                "Wyjaśnienie, jakie słowa i frazy wpływają "
+                "na klasyfikację sentymentu"
+            ),
+        },
+        {
             "Obszar": "Wsparcie decyzji",
             "Metoda": "Regułowy moduł rekomendacyjny",
             "Cel": "Generowanie rekomendacji biznesowych na podstawie danych sprzedażowych i tekstowych",
@@ -1497,6 +1861,57 @@ with tab_export:
                 st.warning(
                     "Nie udało się przygotować eksportu benchmarku: "
                     f"{error}"
+                )
+
+        st.subheader("Interpretowalność modelu")
+
+        if filtered_review_data is None or filtered_review_data.empty:
+            st.warning(
+                "Brak danych tekstowych do eksportu interpretacji."
+            )
+        else:
+            try:
+                export_interpretability = (
+                    get_interpretability_results(
+                        review_data=filtered_review_data,
+                        top_n=20,
+                    )
+                )
+
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    st.download_button(
+                        label="Pobierz terminy wspierające klasy",
+                        data=convert_dataframe_to_csv(
+                            export_interpretability[
+                                "supporting_terms"
+                            ]
+                        ),
+                        file_name=(
+                            "sentiment_supporting_terms.csv"
+                        ),
+                        mime="text/csv",
+                    )
+
+                with col2:
+                    st.download_button(
+                        label="Pobierz terminy działające przeciw klasom",
+                        data=convert_dataframe_to_csv(
+                            export_interpretability[
+                                "opposing_terms"
+                            ]
+                        ),
+                        file_name=(
+                            "sentiment_opposing_terms.csv"
+                        ),
+                        mime="text/csv",
+                    )
+
+            except Exception as error:
+                st.warning(
+                    "Nie udało się przygotować eksportu "
+                    f"interpretacji: {error}"
                 )
 
         st.divider()
