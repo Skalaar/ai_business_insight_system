@@ -11,6 +11,9 @@ from src.data_loader import (
     load_uploaded_sales_data,
 )
 from src.preprocessing import clean_sales_data
+from src.sales_forecasting import (
+    build_sales_forecast_analysis,
+)
 from src.sales_analysis import (
     calculate_sales_kpis,
     monthly_sales,
@@ -134,6 +137,22 @@ def get_topic_analysis_results(
         number_of_topics=number_of_topics,
         top_terms_per_topic=top_terms_per_topic,
         random_state=42,
+    )
+
+@st.cache_data(show_spinner=False)
+def get_sales_forecast_results(
+    sales_data,
+    test_fraction: float,
+    forecast_horizon: int,
+):
+    """
+    Uruchamia analizę prognostyczną i przechowuje
+    jej wyniki w pamięci podręcznej Streamlit.
+    """
+    return build_sales_forecast_analysis(
+        data=sales_data,
+        test_fraction=test_fraction,
+        forecast_horizon=forecast_horizon,
     )
 
 st.sidebar.header("Źródło danych")
@@ -264,6 +283,7 @@ if filtered_review_data is not None:
     tab_intro,
     tab_data,
     tab_sales,
+    tab_forecasting,
     tab_rfm,
     tab_reviews,
     tab_ml,
@@ -278,6 +298,7 @@ if filtered_review_data is not None:
         "Opis projektu",
         "Dane",
         "Analiza sprzedaży",
+        "Prognozowanie",
         "Segmentacja RFM",
         "Analiza opinii",
         "Model bazowy",
@@ -440,6 +461,396 @@ with tab_sales:
             col3.metric("Liczba produktów z opiniami", filtered_review_data["ProductName"].nunique())
 
             st.metric("Liczba opinii po zastosowaniu filtrów", len(filtered_review_data))
+
+with tab_forecasting:
+    st.header("Prognozowanie sprzedaży")
+
+    st.write(
+        """
+        Moduł porównuje cztery metody prognozowania tygodniowego
+        przychodu. Ocena jest prowadzona za pomocą walidacji kroczącej
+        z rozszerzającym się oknem treningowym. W każdym kroku model
+        korzysta wyłącznie z informacji dostępnych przed prognozowanym
+        tygodniem.
+        """
+    )
+
+    st.info(
+        """
+        Najlepszy model wybierany jest na podstawie najniższej wartości
+        RMSE. Dodatkowo prezentowane są MAE, MAPE, sMAPE, WAPE
+        oraz średnie obciążenie prognozy.
+        """
+    )
+
+    if filtered_sales_data is None or filtered_sales_data.empty:
+        st.warning(
+            "Brak danych sprzedażowych do prognozowania."
+        )
+    else:
+        col1, col2 = st.columns(2)
+
+        with col1:
+            selected_test_percent = st.slider(
+                "Udział okresów przeznaczonych do walidacji",
+                min_value=20,
+                max_value=40,
+                value=25,
+                step=5,
+                help=(
+                    "Końcowa część szeregu jest prognozowana "
+                    "w trybie kroczącym i nie jest używana "
+                    "do trenowania wcześniejszych prognoz."
+                ),
+            )
+
+        with col2:
+            selected_forecast_horizon = st.slider(
+                "Horyzont przyszłej prognozy w tygodniach",
+                min_value=4,
+                max_value=16,
+                value=8,
+                step=1,
+            )
+
+        try:
+            with st.spinner(
+                "Trwa walidacja i porównywanie modeli prognostycznych..."
+            ):
+                forecast_results = get_sales_forecast_results(
+                    sales_data=filtered_sales_data,
+                    test_fraction=(
+                        selected_test_percent
+                        / 100
+                    ),
+                    forecast_horizon=(
+                        selected_forecast_horizon
+                    ),
+                )
+
+            forecast_metrics = forecast_results[
+                "metrics"
+            ]
+
+            best_forecast_row = forecast_metrics.iloc[
+                0
+            ]
+
+            col1, col2, col3, col4 = st.columns(4)
+
+            col1.metric(
+                "Najlepszy model",
+                forecast_results[
+                    "best_model_name"
+                ],
+            )
+
+            col2.metric(
+                "RMSE",
+                f"{best_forecast_row['RMSE']:,.2f}",
+            )
+
+            col3.metric(
+                "MAE",
+                f"{best_forecast_row['MAE']:,.2f}",
+            )
+
+            col4.metric(
+                "sMAPE",
+                f"{best_forecast_row['sMAPE']:.2f}%",
+            )
+
+            col5, col6, col7, col8 = st.columns(4)
+
+            col5.metric(
+                "Liczba tygodni",
+                forecast_results[
+                    "number_of_observations"
+                ],
+            )
+
+            col6.metric(
+                "Początkowy zbiór treningowy",
+                forecast_results[
+                    "initial_train_size"
+                ],
+            )
+
+            col7.metric(
+                "Okresy walidacyjne",
+                forecast_results[
+                    "test_size"
+                ],
+            )
+
+            col8.metric(
+                "Horyzont przyszły",
+                (
+                    f"{forecast_results['forecast_horizon']} tyg."
+                ),
+            )
+
+            st.divider()
+
+            st.subheader(
+                "Ranking modeli prognostycznych"
+            )
+
+            st.dataframe(
+                forecast_metrics.style.format(
+                    {
+                        "MAE": "{:,.2f}",
+                        "RMSE": "{:,.2f}",
+                        "MAPE": "{:.2f}%",
+                        "sMAPE": "{:.2f}%",
+                        "WAPE": "{:.2f}%",
+                        "Bias": "{:,.2f}",
+                        "ValidationPeriods": "{:.0f}",
+                    }
+                ),
+                width="stretch",
+            )
+
+            ranking_figure = px.bar(
+                forecast_metrics.sort_values(
+                    by="RMSE",
+                    ascending=False,
+                ),
+                x="RMSE",
+                y="Model",
+                orientation="h",
+                title=(
+                    "Porównanie modeli według RMSE "
+                    "— niższa wartość jest lepsza"
+                ),
+                text="RMSE",
+            )
+
+            ranking_figure.update_traces(
+                texttemplate="%{text:.2f}",
+                textposition="outside",
+            )
+
+            st.plotly_chart(
+                ranking_figure,
+                width="stretch",
+            )
+
+            st.divider()
+
+            st.subheader(
+                "Walidacja krocząca modeli"
+            )
+
+            selected_forecast_model = st.selectbox(
+                "Wybierz model do wyświetlenia",
+                options=forecast_metrics[
+                    "Model"
+                ].tolist(),
+                index=0,
+                key="forecast_validation_model",
+            )
+
+            selected_validation_predictions = (
+                forecast_results[
+                    "validation_predictions"
+                ][
+                    forecast_results[
+                        "validation_predictions"
+                    ]["Model"]
+                    == selected_forecast_model
+                ]
+                .copy()
+            )
+
+            actual_history_plot = (
+                forecast_results[
+                    "weekly_data"
+                ][
+                    [
+                        "PeriodEnd",
+                        "Revenue",
+                    ]
+                ]
+                .rename(
+                    columns={
+                        "Revenue": "Value",
+                    }
+                )
+            )
+
+            actual_history_plot["Series"] = (
+                "Sprzedaż rzeczywista"
+            )
+
+            validation_forecast_plot = (
+                selected_validation_predictions[
+                    [
+                        "PeriodEnd",
+                        "ForecastRevenue",
+                    ]
+                ]
+                .rename(
+                    columns={
+                        "ForecastRevenue": "Value",
+                    }
+                )
+            )
+
+            validation_forecast_plot["Series"] = (
+                f"Prognoza: {selected_forecast_model}"
+            )
+
+            validation_plot_data = pd.concat(
+                [
+                    actual_history_plot,
+                    validation_forecast_plot,
+                ],
+                ignore_index=True,
+            )
+
+            validation_figure = px.line(
+                validation_plot_data,
+                x="PeriodEnd",
+                y="Value",
+                color="Series",
+                markers=True,
+                title=(
+                    "Sprzedaż rzeczywista i prognozy "
+                    "jednookresowe"
+                ),
+            )
+
+            st.plotly_chart(
+                validation_figure,
+                width="stretch",
+            )
+
+            st.dataframe(
+                selected_validation_predictions.style.format(
+                    {
+                        "ActualRevenue": "{:,.2f}",
+                        "ForecastRevenue": "{:,.2f}",
+                        "Error": "{:,.2f}",
+                        "AbsoluteError": "{:,.2f}",
+                    }
+                ),
+                width="stretch",
+            )
+
+            st.divider()
+
+            st.subheader(
+                "Prognoza przyszłej sprzedaży"
+            )
+
+            future_forecast = forecast_results[
+                "future_forecast"
+            ]
+
+            recent_history = (
+                forecast_results[
+                    "weekly_data"
+                ]
+                .tail(20)[
+                    [
+                        "PeriodEnd",
+                        "Revenue",
+                    ]
+                ]
+                .rename(
+                    columns={
+                        "Revenue": "Value",
+                    }
+                )
+            )
+
+            recent_history["Series"] = (
+                "Sprzedaż historyczna"
+            )
+
+            future_plot = (
+                future_forecast[
+                    [
+                        "PeriodEnd",
+                        "ForecastRevenue",
+                    ]
+                ]
+                .rename(
+                    columns={
+                        "ForecastRevenue": "Value",
+                    }
+                )
+            )
+
+            future_plot["Series"] = (
+                "Prognoza przyszła"
+            )
+
+            future_plot_data = pd.concat(
+                [
+                    recent_history,
+                    future_plot,
+                ],
+                ignore_index=True,
+            )
+
+            future_figure = px.line(
+                future_plot_data,
+                x="PeriodEnd",
+                y="Value",
+                color="Series",
+                markers=True,
+                title=(
+                    "Prognoza tygodniowego przychodu "
+                    f"— {forecast_results['best_model_name']}"
+                ),
+            )
+
+            st.plotly_chart(
+                future_figure,
+                width="stretch",
+            )
+
+            st.dataframe(
+                future_forecast.style.format(
+                    {
+                        "ForecastRevenue": "{:,.2f}",
+                    }
+                ),
+                width="stretch",
+            )
+
+            st.divider()
+
+            st.subheader("Interpretacja metryk")
+
+            st.write(
+                """
+                **MAE** określa przeciętną bezwzględną różnicę pomiędzy
+                prognozą i wynikiem rzeczywistym. **RMSE** silniej
+                penalizuje duże błędy. **MAPE**, **sMAPE** i **WAPE**
+                przedstawiają błędy w ujęciu procentowym. **Bias**
+                większy od zera oznacza przeciętne zawyżanie prognoz,
+                natomiast wartość ujemna wskazuje na ich zaniżanie.
+                """
+            )
+
+            st.warning(
+                """
+                Obecna prognoza korzysta z syntetycznych danych, których
+                sprzedaż została wygenerowana losowo. Moduł pozwala
+                zweryfikować poprawność całej procedury, ale ostateczna
+                ocena wartości biznesowej prognoz powinna zostać wykonana
+                na rzeczywistym szeregu sprzedażowym.
+                """
+            )
+
+        except Exception as error:
+            st.error(
+                "Nie udało się przeprowadzić prognozowania: "
+                f"{error}"
+            )
 
 with tab_rfm:
     st.header("Segmentacja klientów metodą RFM")
@@ -1908,6 +2319,57 @@ with tab_summary:
         col6.metric("Śr. wartość zamówienia", f"{sales_kpis_summary['average_order_value']:,.2f}")
         col7.metric("Zakres dat", f"{min_sales_date} — {max_sales_date}")
 
+        st.subheader("Wyniki prognozowania sprzedaży")
+
+        try:
+            summary_forecast_results = (
+                get_sales_forecast_results(
+                    sales_data=filtered_sales_data,
+                    test_fraction=0.25,
+                    forecast_horizon=8,
+                )
+            )
+
+            summary_forecast_metrics = (
+                summary_forecast_results[
+                    "metrics"
+                ]
+            )
+
+            summary_best_forecast = (
+                summary_forecast_metrics.iloc[0]
+            )
+
+            col1, col2, col3, col4 = st.columns(4)
+
+            col1.metric(
+                "Najlepszy model",
+                summary_forecast_results[
+                    "best_model_name"
+                ],
+            )
+
+            col2.metric(
+                "RMSE",
+                f"{summary_best_forecast['RMSE']:,.2f}",
+            )
+
+            col3.metric(
+                "MAE",
+                f"{summary_best_forecast['MAE']:,.2f}",
+            )
+
+            col4.metric(
+                "sMAPE",
+                f"{summary_best_forecast['sMAPE']:.2f}%",
+            )
+
+        except Exception as error:
+            st.warning(
+                "Nie udało się przygotować podsumowania "
+                f"prognozowania: {error}"
+            )
+
     st.divider()
 
     if filtered_review_data is None or filtered_review_data.empty:
@@ -1975,6 +2437,18 @@ with tab_summary:
             "Cel": (
                 "Automatyczne wykrywanie ukrytych tematów i aspektów "
                 "w opiniach klientów oraz analiza ich sentymentu"
+            ),
+        },
+        {
+            "Obszar": "Prognozowanie sprzedaży",
+            "Metoda": (
+                "Tygodniowa agregacja przychodów, walidacja krocząca, "
+                "prognoza naiwna, średnia ruchoma, trend liniowy "
+                "oraz metoda Holta"
+            ),
+            "Cel": (
+                "Porównanie skuteczności modeli i oszacowanie "
+                "przyszłego poziomu przychodów"
             ),
         },
         {
@@ -2365,6 +2839,72 @@ with tab_export:
                 st.warning(
                     "Nie udało się przygotować eksportu "
                     f"modelowania tematów: {error}"
+                )
+
+        st.subheader("Prognozowanie sprzedaży")
+
+        if filtered_sales_data is None or filtered_sales_data.empty:
+            st.warning(
+                "Brak danych sprzedażowych do eksportu prognoz."
+            )
+        else:
+            try:
+                export_forecast_results = (
+                    get_sales_forecast_results(
+                        sales_data=filtered_sales_data,
+                        test_fraction=0.25,
+                        forecast_horizon=8,
+                    )
+                )
+
+                col1, col2, col3 = st.columns(3)
+
+                with col1:
+                    st.download_button(
+                        label="Pobierz ranking modeli prognoz",
+                        data=convert_dataframe_to_csv(
+                            export_forecast_results[
+                                "metrics"
+                            ]
+                        ),
+                        file_name=(
+                            "sales_forecast_model_ranking.csv"
+                        ),
+                        mime="text/csv",
+                    )
+
+                with col2:
+                    st.download_button(
+                        label="Pobierz wyniki walidacji",
+                        data=convert_dataframe_to_csv(
+                            export_forecast_results[
+                                "validation_predictions"
+                            ]
+                        ),
+                        file_name=(
+                            "sales_forecast_validation.csv"
+                        ),
+                        mime="text/csv",
+                    )
+
+                with col3:
+                    st.download_button(
+                        label="Pobierz przyszłą prognozę",
+                        data=convert_dataframe_to_csv(
+                            export_forecast_results[
+                                "future_forecast"
+                            ]
+                        ),
+                        file_name=(
+                            "future_sales_forecast.csv"
+                        ),
+                        mime="text/csv",
+                    )
+
+            except Exception as error:
+                st.warning(
+                    "Nie udało się przygotować eksportu prognoz: "
+                    f"{error}"
                 )
             
         st.divider()
