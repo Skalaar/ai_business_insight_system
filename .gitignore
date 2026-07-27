@@ -34,3 +34,11 @@ Thumbs.db
 htmlcov/
 coverage.xml
 .pytest_cache/
+
+# Streamlit local secrets
+.streamlit/secrets.toml
+
+# Application logs and generated models
+logs/
+models/
+*.joblib

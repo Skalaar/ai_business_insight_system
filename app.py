@@ -57,15 +57,44 @@ from src.transformer_sentiment import (
 from src.drift_monitoring import (
     build_drift_monitoring_analysis,
 )
+from src.app_config import (
+    APP_DESCRIPTION,
+    APP_NAME,
+    APP_PAGE_ICON,
+    APP_VERSION,
+    DATA_DISCLAIMER,
+)
+from src.ui_components import (
+    inject_global_styles,
+    render_app_header,
+    render_footer,
+    render_sidebar_status,
+)
 
 st.set_page_config(
-    page_title="AI Business Insight System",
-    page_icon="📊",
+    page_title=APP_NAME,
+    page_icon=APP_PAGE_ICON,
     layout="wide",
+    initial_sidebar_state="expanded",
+    menu_items={
+        "Get help": None,
+        "Report a bug": None,
+        "About": (
+            f"{APP_NAME}\n\n"
+            f"Wersja: {APP_VERSION}\n\n"
+            "Prototyp przygotowany na potrzeby pracy magisterskiej."
+        ),
+    },
+)
+inject_global_styles()
+
+render_app_header(
+    app_name=APP_NAME,
+    description=APP_DESCRIPTION,
+    version=APP_VERSION,
 )
 
 
-st.title("AI Business Insight System")
 st.subheader("Prototyp systemu wspierającego decyzje przedsiębiorstwa")
 
 
@@ -357,6 +386,12 @@ if filtered_review_data is not None:
         sentiments=selected_sentiments,
     )
 
+render_sidebar_status(
+    sales_data=filtered_sales_data,
+    review_data=filtered_review_data,
+    version=APP_VERSION,
+)
+
 
 (
     tab_intro,
@@ -401,19 +436,23 @@ with tab_intro:
 
     st.write(
         """
-        Aplikacja stanowi prototyp systemu analitycznego wspierającego procesy
-        decyzyjne przedsiębiorstwa. W obecnej wersji program wczytuje dane
-        sprzedażowe, wykonuje ich podstawowe czyszczenie oraz prezentuje
-        kluczowe wskaźniki i wizualizacje.
+        Aplikacja stanowi prototyp zintegrowanego systemu
+        analitycznego wspierającego procesy decyzyjne
+        przedsiębiorstwa. System łączy analizę danych
+        sprzedażowych i tekstowych z metodami uczenia
+        maszynowego, przetwarzania języka naturalnego,
+        prognozowania oraz analityki biznesowej.
         """
     )
 
     st.info(
         """
-        Ten etap projektu obejmuje podstawowy moduł analizy sprzedaży.
-        W kolejnych etapach aplikacja zostanie rozszerzona o analizę opinii
-        klientów, klasyfikację sentymentu oraz generowanie rekomendacji
-        decyzyjnych.
+        Wersja 3.0-beta obejmuje analizę sprzedaży,
+        segmentację klientów RFM, klasyfikację sentymentu,
+        porównanie modeli ML, transformer BERT,
+        interpretowalność AI, modelowanie tematów,
+        prognozowanie sprzedaży, monitoring driftu
+        oraz zintegrowane centrum wspomagania decyzji.
         """
     )
 
@@ -422,23 +461,20 @@ with tab_intro:
     st.write(f"**Dane tekstowe:** {review_data_source_description}")
 
     st.subheader("Wymagany format danych sprzedażowych")
-    st.write(
-        """
-        Plik sprzedażowy powinien zawierać następujące kolumny:
-        """
+    st.write("Plik sprzedażowy powinien zawierać następujące kolumny:")
+    st.code(
+        "InvoiceNo, StockCode, Description, Quantity, "
+        "InvoiceDate, UnitPrice, CustomerID, Country",
+        language=None,
     )
 
     st.subheader("Wymagany format danych tekstowych")
+    st.write("Plik opinii powinien zawierać następujące kolumny:")
     st.code(
-        "ReviewID, ProductID, ProductName, Rating, ReviewDate, ReviewText",
-        language="text",
+        "ReviewID, ProductID, ProductName, Rating, "
+        "ReviewDate, ReviewText",
+        language=None,
     )
-
-    st.code(
-        "InvoiceNo, StockCode, Description, Quantity, InvoiceDate, UnitPrice, CustomerID, Country",
-        language="text",
-    )
-
 
 with tab_data:
     st.header("Dane sprzedażowe")
@@ -4546,87 +4582,87 @@ with tab_export:
                 
         st.subheader("Model transformerowy BERT")
 
-prepare_transformer_export = st.checkbox(
-    "Przygotuj wyniki transformera do eksportu",
-    value=False,
-    key="prepare_transformer_export",
-)
-
-if prepare_transformer_export:
-    if (
-        filtered_review_data is None
-        or filtered_review_data.empty
-    ):
-        st.warning(
-            "Brak opinii do eksportu wyników BERT."
+        prepare_transformer_export = st.checkbox(
+            "Przygotuj wyniki transformera do eksportu",
+            value=False,
+            key="prepare_transformer_export",
         )
-    else:
-        try:
-            with st.spinner(
-                "Trwa przygotowywanie wyników modelu BERT..."
+
+        if prepare_transformer_export:
+            if (
+                filtered_review_data is None
+                or filtered_review_data.empty
             ):
-                export_transformer_results = (
-                    get_transformer_evaluation_results(
-                        review_data=(
-                            filtered_review_data
-                        ),
-                        model_name=(
-                            DEFAULT_TRANSFORMER_MODEL
-                        ),
-                        batch_size=16,
-                    )
+                st.warning(
+                    "Brak opinii do eksportu wyników BERT."
                 )
+            else:
+                try:
+                    with st.spinner(
+                        "Trwa przygotowywanie wyników modelu BERT..."
+                    ):
+                        export_transformer_results = (
+                            get_transformer_evaluation_results(
+                                review_data=(
+                                    filtered_review_data
+                                ),
+                                model_name=(
+                                    DEFAULT_TRANSFORMER_MODEL
+                                ),
+                                batch_size=16,
+                            )
+                        )
 
-            col1, col2, col3 = st.columns(3)
+                    col1, col2, col3 = st.columns(3)
 
-            with col1:
-                st.download_button(
-                    label="Pobierz metryki BERT",
-                    data=convert_dataframe_to_csv(
-                        export_transformer_results[
-                            "metrics"
-                        ]
-                    ),
-                    file_name=(
-                        "transformer_sentiment_metrics.csv"
-                    ),
-                    mime="text/csv",
-                )
+                    with col1:
+                        st.download_button(
+                            label="Pobierz metryki BERT",
+                            data=convert_dataframe_to_csv(
+                                export_transformer_results[
+                                    "metrics"
+                                ]
+                            ),
+                            file_name=(
+                                "transformer_sentiment_metrics.csv"
+                            ),
+                            mime="text/csv",
+                        )
 
-            with col2:
-                st.download_button(
-                    label="Pobierz predykcje BERT",
-                    data=convert_dataframe_to_csv(
-                        export_transformer_results[
-                            "predictions"
-                        ]
-                    ),
-                    file_name=(
-                        "transformer_sentiment_predictions.csv"
-                    ),
-                    mime="text/csv",
-                )
+                    with col2:
+                        st.download_button(
+                            label="Pobierz predykcje BERT",
+                            data=convert_dataframe_to_csv(
+                                export_transformer_results[
+                                    "predictions"
+                                ]
+                            ),
+                            file_name=(
+                                "transformer_sentiment_predictions.csv"
+                            ),
+                            mime="text/csv",
+                        )
 
-            with col3:
-                st.download_button(
-                    label="Pobierz błędy BERT",
-                    data=convert_dataframe_to_csv(
-                        export_transformer_results[
-                            "errors"
-                        ]
-                    ),
-                    file_name=(
-                        "transformer_sentiment_errors.csv"
-                    ),
-                    mime="text/csv",
-                )
+                    with col3:
+                        st.download_button(
+                            label="Pobierz błędy BERT",
+                            data=convert_dataframe_to_csv(
+                                export_transformer_results[
+                                    "errors"
+                                ]
+                            ),
+                            file_name=(
+                                "transformer_sentiment_errors.csv"
+                            ),
+                            mime="text/csv",
+                        )
 
-        except Exception as error:
-            st.warning(
-                "Nie udało się przygotować eksportu BERT: "
-                f"{error}"
-            )
-            
+                except Exception as error:
+                    st.warning(
+                        "Nie udało się przygotować eksportu BERT: "
+                        f"{error}"
+                    )    
+          
         st.divider()
 
         st.info(
@@ -4635,4 +4671,9 @@ if prepare_transformer_export:
             ponieważ pozwala przenieść rezultaty analizy do arkusza kalkulacyjnego
             lub wykorzystać je jako załączniki do raportu biznesowego.
             """
-        )            
+        )
+
+render_footer(
+    version=APP_VERSION,
+    disclaimer=DATA_DISCLAIMER,
+    )   
