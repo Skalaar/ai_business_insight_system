@@ -39,6 +39,9 @@ from src.sentiment_models import (
     sentiment_comparison_summary,
     train_tfidf_logistic_regression_model,
 )
+from src.advanced_recommendations import (
+    build_advanced_decision_support,
+)
 from src.filters import filter_review_data, filter_sales_data
 from src.model_comparison import compare_sentiment_models
 from src.model_interpretability import (
@@ -153,6 +156,27 @@ def get_sales_forecast_results(
         data=sales_data,
         test_fraction=test_fraction,
         forecast_horizon=forecast_horizon,
+    )
+
+@st.cache_data(show_spinner=False)
+def get_advanced_decision_results(
+    sales_data,
+    review_data,
+    topic_assignments,
+    weekly_data,
+    future_forecast,
+):
+    """
+    Integruje sprzedaż, sentyment, tematy opinii
+    oraz prognozę sprzedaży.
+    """
+    return build_advanced_decision_support(
+        sales_data=sales_data,
+        review_data=review_data,
+        topic_assignments=topic_assignments,
+        weekly_data=weekly_data,
+        future_forecast=future_forecast,
+        trend_window_weeks=8,
     )
 
 st.sidebar.header("Źródło danych")
@@ -290,6 +314,7 @@ if filtered_review_data is not None:
     tab_model_comparison,
     tab_interpretability,
     tab_topics,
+    tab_decision_center,
     tab_recommendations,
     tab_summary,
     tab_export,
@@ -305,6 +330,7 @@ if filtered_review_data is not None:
         "Porównanie modeli",
         "Interpretowalność AI",
         "Tematy opinii",
+        "Centrum decyzji",
         "Rekomendacje",
         "Podsumowanie badania",
         "Eksport wyników",
@@ -1528,6 +1554,449 @@ with tab_interpretability:
                 f"{error}"
             )
 
+with tab_decision_center:
+    st.header("Zaawansowane centrum wspomagania decyzji")
+
+    st.write(
+        """
+        Moduł integruje wyniki analizy sprzedaży, trendów produktowych,
+        sentymentu klientów, modelowania tematów oraz prognozowania.
+        Produkty są klasyfikowane według ich znaczenia sprzedażowego
+        i bilansu opinii klientów.
+        """
+    )
+
+    if (
+        filtered_sales_data is None
+        or filtered_sales_data.empty
+        or filtered_review_data is None
+        or filtered_review_data.empty
+    ):
+        st.warning(
+            "Centrum decyzji wymaga jednocześnie danych "
+            "sprzedażowych i opinii klientów."
+        )
+    else:
+        try:
+            with st.spinner(
+                "Trwa integrowanie wyników analiz..."
+            ):
+                decision_topic_results = (
+                    get_topic_analysis_results(
+                        review_data=filtered_review_data,
+                        number_of_topics=5,
+                        top_terms_per_topic=10,
+                    )
+                )
+
+                decision_forecast_results = (
+                    get_sales_forecast_results(
+                        sales_data=filtered_sales_data,
+                        test_fraction=0.25,
+                        forecast_horizon=8,
+                    )
+                )
+
+                decision_results = (
+                    get_advanced_decision_results(
+                        sales_data=filtered_sales_data,
+                        review_data=filtered_review_data,
+                        topic_assignments=(
+                            decision_topic_results[
+                                "review_assignments"
+                            ]
+                        ),
+                        weekly_data=(
+                            decision_forecast_results[
+                                "weekly_data"
+                            ]
+                        ),
+                        future_forecast=(
+                            decision_forecast_results[
+                                "future_forecast"
+                            ]
+                        ),
+                    )
+                )
+
+            executive_summary = decision_results[
+                "executive_summary"
+            ]
+
+            product_matrix = decision_results[
+                "product_matrix"
+            ]
+
+            advanced_recommendations = (
+                decision_results[
+                    "recommendations"
+                ]
+            )
+
+            col1, col2, col3, col4 = st.columns(4)
+
+            col1.metric(
+                "Analizowane produkty",
+                executive_summary[
+                    "ProductsAnalyzed"
+                ],
+            )
+
+            col2.metric(
+                "Wysoki priorytet",
+                executive_summary[
+                    "HighPriorityRecommendations"
+                ],
+            )
+
+            col3.metric(
+                "Perspektywa sprzedaży",
+                executive_summary[
+                    "ForecastDirection"
+                ],
+            )
+
+            forecast_change = executive_summary[
+                "ForecastChangePct"
+            ]
+
+            col4.metric(
+                "Zmiana prognozowanego poziomu",
+                (
+                    f"{forecast_change:.2f}%"
+                    if not pd.isna(
+                        forecast_change
+                    )
+                    else "Brak danych"
+                ),
+            )
+
+            col5, col6 = st.columns(2)
+
+            col5.metric(
+                "Najwyższe ryzyko",
+                executive_summary[
+                    "TopRiskProduct"
+                ],
+            )
+
+            col6.metric(
+                "Największy potencjał",
+                executive_summary[
+                    "TopOpportunityProduct"
+                ],
+            )
+
+            st.divider()
+
+            st.subheader(
+                "Macierz sprzedaż–sentyment"
+            )
+
+            matrix_plot_data = product_matrix.copy()
+
+            matrix_plot_data["ReviewsForSize"] = (
+                matrix_plot_data["Reviews"]
+                .clip(lower=1)
+            )
+
+            decision_matrix_figure = px.scatter(
+                matrix_plot_data,
+                x="SalesImportance",
+                y="SentimentBalance",
+                size="ReviewsForSize",
+                color="DecisionQuadrant",
+                hover_name="ProductName",
+                hover_data={
+                    "Revenue": ":,.2f",
+                    "RevenueTrendPct": ":.2f",
+                    "AverageRating": ":.2f",
+                    "PositiveShare": ":.2%",
+                    "NegativeShare": ":.2%",
+                    "ReviewsForSize": False,
+                },
+                title=(
+                    "Pozycja produktów według znaczenia "
+                    "sprzedażowego i bilansu opinii"
+                ),
+            )
+
+            decision_matrix_figure.add_vline(
+                x=0.50,
+                line_dash="dash",
+            )
+
+            decision_matrix_figure.add_hline(
+                y=0.20,
+                line_dash="dash",
+            )
+
+            st.plotly_chart(
+                decision_matrix_figure,
+                width="stretch",
+            )
+
+            st.caption(
+                """
+                Prawa część wykresu obejmuje produkty o wyższym znaczeniu
+                sprzedażowym. Górna część oznacza korzystniejszy bilans
+                opinii pozytywnych względem negatywnych.
+                """
+            )
+
+            st.divider()
+
+            st.subheader(
+                "Ranking ryzyka i potencjału"
+            )
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                risk_data = (
+                    product_matrix
+                    .nlargest(
+                        10,
+                        "RiskScore",
+                    )
+                    .sort_values(
+                        by="RiskScore",
+                        ascending=True,
+                    )
+                )
+
+                risk_figure = px.bar(
+                    risk_data,
+                    x="RiskScore",
+                    y="ProductName",
+                    orientation="h",
+                    title=(
+                        "Produkty o najwyższym "
+                        "wskaźniku ryzyka"
+                    ),
+                    range_x=[0, 100],
+                )
+
+                st.plotly_chart(
+                    risk_figure,
+                    width="stretch",
+                )
+
+            with col2:
+                opportunity_data = (
+                    product_matrix
+                    .nlargest(
+                        10,
+                        "OpportunityScore",
+                    )
+                    .sort_values(
+                        by="OpportunityScore",
+                        ascending=True,
+                    )
+                )
+
+                opportunity_figure = px.bar(
+                    opportunity_data,
+                    x="OpportunityScore",
+                    y="ProductName",
+                    orientation="h",
+                    title=(
+                        "Produkty o najwyższym "
+                        "potencjale rozwojowym"
+                    ),
+                    range_x=[0, 100],
+                )
+
+                st.plotly_chart(
+                    opportunity_figure,
+                    width="stretch",
+                )
+
+            st.divider()
+
+            st.subheader(
+                "Macierz wskaźników produktowych"
+            )
+
+            matrix_columns = [
+                "ProductName",
+                "DecisionQuadrant",
+                "Revenue",
+                "RevenueShare",
+                "RevenueTrendPct",
+                "Reviews",
+                "AverageRating",
+                "PositiveShare",
+                "NegativeShare",
+                "DominantTopic",
+                "RiskScore",
+                "OpportunityScore",
+            ]
+
+            st.dataframe(
+                product_matrix[
+                    matrix_columns
+                ]
+                .sort_values(
+                    by="Revenue",
+                    ascending=False,
+                )
+                .style.format(
+                    {
+                        "Revenue": "{:,.2f}",
+                        "RevenueShare": "{:.2%}",
+                        "RevenueTrendPct": "{:.2f}%",
+                        "AverageRating": "{:.2f}",
+                        "PositiveShare": "{:.2%}",
+                        "NegativeShare": "{:.2%}",
+                        "RiskScore": "{:.2f}",
+                        "OpportunityScore": "{:.2f}",
+                    }
+                ),
+                width="stretch",
+            )
+
+            st.divider()
+
+            st.subheader(
+                "Zaawansowane rekomendacje"
+            )
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                selected_advanced_priority = (
+                    st.selectbox(
+                        "Priorytet",
+                        options=[
+                            "Wszystkie",
+                            "Wysoki",
+                            "Średni",
+                            "Niski",
+                        ],
+                        key=(
+                            "advanced_recommendation_priority"
+                        ),
+                    )
+                )
+
+            with col2:
+                available_categories = sorted(
+                    advanced_recommendations[
+                        "Category"
+                    ]
+                    .dropna()
+                    .unique()
+                    .tolist()
+                )
+
+                selected_advanced_category = (
+                    st.selectbox(
+                        "Kategoria",
+                        options=[
+                            "Wszystkie",
+                            *available_categories,
+                        ],
+                        key=(
+                            "advanced_recommendation_category"
+                        ),
+                    )
+                )
+
+            displayed_recommendations = (
+                advanced_recommendations.copy()
+            )
+
+            if (
+                selected_advanced_priority
+                != "Wszystkie"
+            ):
+                displayed_recommendations = (
+                    displayed_recommendations[
+                        displayed_recommendations[
+                            "Priority"
+                        ]
+                        == selected_advanced_priority
+                    ]
+                )
+
+            if (
+                selected_advanced_category
+                != "Wszystkie"
+            ):
+                displayed_recommendations = (
+                    displayed_recommendations[
+                        displayed_recommendations[
+                            "Category"
+                        ]
+                        == selected_advanced_category
+                    ]
+                )
+
+            for _, recommendation_row in (
+                displayed_recommendations.iterrows()
+            ):
+                with st.container(border=True):
+                    st.subheader(
+                        f"{recommendation_row['ProductName']} "
+                        f"— {recommendation_row['Category']}"
+                    )
+
+                    col1, col2, col3 = st.columns(3)
+
+                    col1.write(
+                        "**Priorytet:** "
+                        f"{recommendation_row['Priority']}"
+                    )
+
+                    col2.write(
+                        "**Wskaźnik:** "
+                        f"{recommendation_row['PriorityScore']:.2f}"
+                    )
+
+                    col3.write(
+                        "**Macierz:** "
+                        f"{recommendation_row['DecisionQuadrant']}"
+                    )
+
+                    st.write(
+                        "**Wniosek:** "
+                        f"{recommendation_row['Conclusion']}"
+                    )
+
+                    st.write(
+                        "**Rekomendowane działanie:** "
+                        f"{recommendation_row['Recommendation']}"
+                    )
+
+            st.dataframe(
+                advanced_recommendations.style.format(
+                    {
+                        "PriorityScore": "{:.2f}",
+                        "Revenue": "{:,.2f}",
+                        "RevenueTrendPct": "{:.2f}%",
+                        "AverageRating": "{:.2f}",
+                        "PositiveShare": "{:.2%}",
+                        "NegativeShare": "{:.2%}",
+                    }
+                ),
+                width="stretch",
+            )
+
+            st.warning(
+                """
+                Wskaźniki ryzyka i potencjału są syntetycznymi miarami
+                wspierającymi analizę. Nie zastępują oceny menedżera
+                i powinny być interpretowane wraz z kontekstem biznesowym.
+                """
+            )
+
+        except Exception as error:
+            st.error(
+                "Nie udało się przygotować centrum decyzji: "
+                f"{error}"
+            )
+
 with tab_recommendations:
     st.header("Rekomendacje decyzyjne")
 
@@ -2452,6 +2921,17 @@ with tab_summary:
             ),
         },
         {
+            "Obszar": "Zaawansowane wsparcie decyzji",
+            "Metoda": (
+                "Integracja sprzedaży, trendów produktowych, sentymentu, "
+                "tematów opinii oraz prognozy przyszłej sprzedaży"
+            ),
+            "Cel": (
+                "Identyfikacja ryzyka, potencjału rozwojowego oraz "
+                "priorytetów działań dla poszczególnych produktów"
+            ),
+        },
+        {
             "Obszar": "Wsparcie decyzji",
             "Metoda": "Regułowy moduł rekomendacyjny",
             "Cel": "Generowanie rekomendacji biznesowych na podstawie danych sprzedażowych i tekstowych",
@@ -2904,6 +3384,108 @@ with tab_export:
             except Exception as error:
                 st.warning(
                     "Nie udało się przygotować eksportu prognoz: "
+                    f"{error}"
+                )
+
+        st.subheader("Zaawansowane centrum decyzji")
+
+        if (
+            filtered_sales_data is None
+            or filtered_sales_data.empty
+            or filtered_review_data is None
+            or filtered_review_data.empty
+        ):
+            st.warning(
+                "Brak danych wymaganych do eksportu "
+                "zaawansowanych rekomendacji."
+            )
+        else:
+            try:
+                export_decision_topics = (
+                    get_topic_analysis_results(
+                        review_data=filtered_review_data,
+                        number_of_topics=5,
+                        top_terms_per_topic=10,
+                    )
+                )
+
+                export_decision_forecast = (
+                    get_sales_forecast_results(
+                        sales_data=filtered_sales_data,
+                        test_fraction=0.25,
+                        forecast_horizon=8,
+                    )
+                )
+
+                export_decision_results = (
+                    get_advanced_decision_results(
+                        sales_data=filtered_sales_data,
+                        review_data=filtered_review_data,
+                        topic_assignments=(
+                            export_decision_topics[
+                                "review_assignments"
+                            ]
+                        ),
+                        weekly_data=(
+                            export_decision_forecast[
+                                "weekly_data"
+                            ]
+                        ),
+                        future_forecast=(
+                            export_decision_forecast[
+                                "future_forecast"
+                            ]
+                        ),
+                    )
+                )
+
+                col1, col2, col3 = st.columns(3)
+
+                with col1:
+                    st.download_button(
+                        label="Pobierz macierz produktów",
+                        data=convert_dataframe_to_csv(
+                            export_decision_results[
+                                "product_matrix"
+                            ]
+                        ),
+                        file_name=(
+                            "advanced_product_decision_matrix.csv"
+                        ),
+                        mime="text/csv",
+                    )
+
+                with col2:
+                    st.download_button(
+                        label="Pobierz rekomendacje 3.0",
+                        data=convert_dataframe_to_csv(
+                            export_decision_results[
+                                "recommendations"
+                            ]
+                        ),
+                        file_name=(
+                            "advanced_business_recommendations.csv"
+                        ),
+                        mime="text/csv",
+                    )
+
+                with col3:
+                    st.download_button(
+                        label="Pobierz perspektywę prognozy",
+                        data=convert_dataframe_to_csv(
+                            export_decision_results[
+                                "forecast_outlook"
+                            ]
+                        ),
+                        file_name=(
+                            "forecast_business_outlook.csv"
+                        ),
+                        mime="text/csv",
+                    )
+
+            except Exception as error:
+                st.warning(
+                    "Nie udało się przygotować eksportu centrum decyzji: "
                     f"{error}"
                 )
             
