@@ -42,6 +42,7 @@ from src.model_interpretability import (
     build_interpretability_analysis,
     explain_single_review,
 )
+from src.topic_modeling import build_topic_analysis
 
 st.set_page_config(
     page_title="AI Business Insight System",
@@ -116,6 +117,23 @@ def get_interpretability_results(
     return build_interpretability_analysis(
         data=review_data,
         top_n=top_n,
+    )
+
+@st.cache_resource(show_spinner=False)
+def get_topic_analysis_results(
+    review_data,
+    number_of_topics: int,
+    top_terms_per_topic: int,
+):
+    """
+    Uruchamia modelowanie tematów i przechowuje
+    wynik w pamięci podręcznej Streamlit.
+    """
+    return build_topic_analysis(
+        data=review_data,
+        number_of_topics=number_of_topics,
+        top_terms_per_topic=top_terms_per_topic,
+        random_state=42,
     )
 
 st.sidebar.header("Źródło danych")
@@ -251,6 +269,7 @@ if filtered_review_data is not None:
     tab_ml,
     tab_model_comparison,
     tab_interpretability,
+    tab_topics,
     tab_recommendations,
     tab_summary,
     tab_export,
@@ -264,6 +283,7 @@ if filtered_review_data is not None:
         "Model bazowy",
         "Porównanie modeli",
         "Interpretowalność AI",
+        "Tematy opinii",
         "Rekomendacje",
         "Podsumowanie badania",
         "Eksport wyników",
@@ -1224,6 +1244,369 @@ with tab_recommendations:
             """
         )
 
+with tab_topics:
+    st.header("Automatyczne wykrywanie tematów w opiniach")
+
+    st.write(
+        """
+        Model NMF analizuje reprezentację TF-IDF opinii i identyfikuje
+        ukryte grupy współwystępujących słów oraz fraz. Każda opinia
+        zostaje przypisana do tematu, który ma w niej największy udział.
+        """
+    )
+
+    st.info(
+        """
+        Nazwy tematów są generowane automatycznie na podstawie trzech
+        terminów o największych wagach. Powinny być traktowane jako
+        pomoc analityczna, a nie jako ostateczne, obiektywne etykiety.
+        """
+    )
+
+    if filtered_review_data is None or filtered_review_data.empty:
+        st.warning(
+            "Brak danych tekstowych do modelowania tematów."
+        )
+    else:
+        col1, col2 = st.columns(2)
+
+        with col1:
+            selected_number_of_topics = st.slider(
+                "Liczba wykrywanych tematów",
+                min_value=3,
+                max_value=8,
+                value=5,
+                step=1,
+                help=(
+                    "Większa liczba tematów daje bardziej szczegółowy "
+                    "podział, ale może prowadzić do podobnych lub "
+                    "trudnych do interpretacji tematów."
+                ),
+            )
+
+        with col2:
+            selected_top_terms = st.slider(
+                "Liczba terminów opisujących temat",
+                min_value=5,
+                max_value=15,
+                value=10,
+                step=1,
+            )
+
+        try:
+            with st.spinner(
+                "Trwa wykrywanie tematów w opiniach..."
+            ):
+                topic_results = get_topic_analysis_results(
+                    review_data=filtered_review_data,
+                    number_of_topics=(
+                        selected_number_of_topics
+                    ),
+                    top_terms_per_topic=(
+                        selected_top_terms
+                    ),
+                )
+
+            col1, col2, col3, col4 = st.columns(4)
+
+            col1.metric(
+                "Liczba opinii",
+                topic_results["number_of_reviews"],
+            )
+
+            col2.metric(
+                "Liczba tematów",
+                topic_results["number_of_topics"],
+            )
+
+            col3.metric(
+                "Liczba cech TF-IDF",
+                topic_results["number_of_features"],
+            )
+
+            col4.metric(
+                "Śr. dominacja tematu",
+                (
+                    f"{topic_results['average_topic_dominance']:.2%}"
+                ),
+            )
+
+            col5, col6 = st.columns(2)
+
+            col5.metric(
+                "Błąd rekonstrukcji NMF",
+                (
+                    f"{topic_results['reconstruction_error']:.4f}"
+                ),
+            )
+
+            col6.metric(
+                "Różnorodność tematów",
+                (
+                    f"{topic_results['topic_diversity']:.2%}"
+                ),
+            )
+
+            st.caption(
+                """
+                Dominacja tematu informuje, jak dużą część wszystkich wag
+                tematycznych opinii stanowi temat dominujący. Różnorodność
+                określa udział unikalnych terminów w zestawie najważniejszych
+                terminów wszystkich tematów.
+                """
+            )
+
+            st.divider()
+
+            st.subheader("Przegląd wykrytych tematów")
+
+            topic_overview_display = (
+                topic_results["topic_overview"]
+                .merge(
+                    topic_results[
+                        "topic_distribution"
+                    ][
+                        [
+                            "TopicIndex",
+                            "Reviews",
+                            "ReviewShare",
+                            "AverageDominance",
+                        ]
+                    ],
+                    on="TopicIndex",
+                    how="left",
+                )
+            )
+
+            st.dataframe(
+                topic_overview_display.style.format(
+                    {
+                        "ReviewShare": "{:.2%}",
+                        "AverageDominance": "{:.2%}",
+                    }
+                ),
+                width="stretch",
+            )
+
+            topic_distribution_figure = px.bar(
+                topic_results["topic_distribution"],
+                x="TopicLabel",
+                y="Reviews",
+                title="Liczba opinii przypisana do tematów",
+                text="Reviews",
+            )
+
+            topic_distribution_figure.update_xaxes(
+                tickangle=-25
+            )
+
+            st.plotly_chart(
+                topic_distribution_figure,
+                width="stretch",
+            )
+
+            st.divider()
+
+            st.subheader("Szczegóły wybranego tematu")
+
+            selected_topic_label = st.selectbox(
+                "Wybierz temat",
+                options=topic_results[
+                    "topic_overview"
+                ]["TopicLabel"].tolist(),
+                key="selected_topic_label",
+            )
+
+            selected_topic_terms = (
+                topic_results["topic_terms"][
+                    topic_results["topic_terms"][
+                        "TopicLabel"
+                    ]
+                    == selected_topic_label
+                ]
+                .sort_values(
+                    by="Weight",
+                    ascending=True,
+                )
+            )
+
+            topic_terms_figure = px.bar(
+                selected_topic_terms,
+                x="Weight",
+                y="Term",
+                orientation="h",
+                title=(
+                    "Najważniejsze terminy — "
+                    f"{selected_topic_label}"
+                ),
+            )
+
+            st.plotly_chart(
+                topic_terms_figure,
+                width="stretch",
+            )
+
+            st.dataframe(
+                selected_topic_terms.sort_values(
+                    by="Rank"
+                ).style.format(
+                    {
+                        "Weight": "{:.4f}",
+                    }
+                ),
+                width="stretch",
+            )
+
+            st.divider()
+
+            st.subheader(
+                "Sentyment opinii w wybranym temacie"
+            )
+
+            selected_topic_sentiment = (
+                topic_results[
+                    "topic_sentiment_summary"
+                ][
+                    topic_results[
+                        "topic_sentiment_summary"
+                    ]["TopicLabel"]
+                    == selected_topic_label
+                ]
+            )
+
+            sentiment_topic_figure = px.bar(
+                selected_topic_sentiment,
+                x="RatingSentiment",
+                y="Reviews",
+                color="RatingSentiment",
+                title=(
+                    "Rozkład sentymentu — "
+                    f"{selected_topic_label}"
+                ),
+                text="Reviews",
+            )
+
+            st.plotly_chart(
+                sentiment_topic_figure,
+                width="stretch",
+            )
+
+            st.dataframe(
+                selected_topic_sentiment.style.format(
+                    {
+                        "SentimentShare": "{:.2%}",
+                    }
+                ),
+                width="stretch",
+            )
+
+            st.divider()
+
+            st.subheader(
+                "Przykładowe opinie przypisane do tematu"
+            )
+
+            selected_topic_reviews = (
+                topic_results[
+                    "review_assignments"
+                ][
+                    topic_results[
+                        "review_assignments"
+                    ]["TopicLabel"]
+                    == selected_topic_label
+                ]
+                .sort_values(
+                    by="DominantTopicShare",
+                    ascending=False,
+                )
+            )
+
+            review_display_columns = [
+                column
+                for column in [
+                    "ProductName",
+                    "Rating",
+                    "RatingSentiment",
+                    "DominantTopicShare",
+                    "ReviewText",
+                ]
+                if column
+                in selected_topic_reviews.columns
+            ]
+
+            st.dataframe(
+                selected_topic_reviews[
+                    review_display_columns
+                ]
+                .head(30)
+                .style.format(
+                    {
+                        "DominantTopicShare": "{:.2%}",
+                    }
+                ),
+                width="stretch",
+            )
+
+            st.divider()
+
+            st.subheader("Tematy według produktów")
+
+            if topic_results[
+                "product_topic_summary"
+            ].empty:
+                st.warning(
+                    "Brak nazw produktów potrzebnych "
+                    "do analizy produktowej."
+                )
+            else:
+                product_topic_pivot = (
+                    topic_results[
+                        "product_topic_summary"
+                    ]
+                    .pivot_table(
+                        index="ProductName",
+                        columns="TopicLabel",
+                        values="Reviews",
+                        aggfunc="sum",
+                        fill_value=0,
+                    )
+                )
+
+                product_topic_figure = px.imshow(
+                    product_topic_pivot,
+                    text_auto=True,
+                    aspect="auto",
+                    title=(
+                        "Liczba opinii według produktu "
+                        "i dominującego tematu"
+                    ),
+                )
+
+                st.plotly_chart(
+                    product_topic_figure,
+                    width="stretch",
+                )
+
+                st.dataframe(
+                    product_topic_pivot,
+                    width="stretch",
+                )
+
+            st.warning(
+                """
+                Obecne dane są syntetyczne i korzystają z ograniczonej
+                liczby szablonów opinii. Wykryte tematy służą więc przede
+                wszystkim do przetestowania modułu. Ostateczna interpretacja
+                zostanie wykonana na większym, rzeczywistym zbiorze danych.
+                """
+            )
+
+        except Exception as error:
+            st.error(
+                "Nie udało się przeprowadzić modelowania tematów: "
+                f"{error}"
+            )
+
 with tab_model_comparison:
     st.header("Porównanie modeli klasyfikacji sentymentu")
 
@@ -1585,6 +1968,16 @@ with tab_summary:
             ),
         },
         {
+            "Obszar": "Analiza tematów",
+            "Metoda": (
+                "TF-IDF oraz Non-negative Matrix Factorization (NMF)"
+            ),
+            "Cel": (
+                "Automatyczne wykrywanie ukrytych tematów i aspektów "
+                "w opiniach klientów oraz analiza ich sentymentu"
+            ),
+        },
+        {
             "Obszar": "Wsparcie decyzji",
             "Metoda": "Regułowy moduł rekomendacyjny",
             "Cel": "Generowanie rekomendacji biznesowych na podstawie danych sprzedażowych i tekstowych",
@@ -1914,6 +2307,66 @@ with tab_export:
                     f"interpretacji: {error}"
                 )
 
+        st.subheader("Modelowanie tematów opinii")
+
+        if filtered_review_data is None or filtered_review_data.empty:
+            st.warning(
+                "Brak danych tekstowych do eksportu tematów."
+            )
+        else:
+            try:
+                export_topic_results = (
+                    get_topic_analysis_results(
+                        review_data=filtered_review_data,
+                        number_of_topics=5,
+                        top_terms_per_topic=10,
+                    )
+                )
+
+                col1, col2, col3 = st.columns(3)
+
+                with col1:
+                    st.download_button(
+                        label="Pobierz wykryte tematy",
+                        data=convert_dataframe_to_csv(
+                            export_topic_results[
+                                "topic_terms"
+                            ]
+                        ),
+                        file_name="review_topic_terms.csv",
+                        mime="text/csv",
+                    )
+
+                with col2:
+                    st.download_button(
+                        label="Pobierz przypisania opinii",
+                        data=convert_dataframe_to_csv(
+                            export_topic_results[
+                                "review_assignments"
+                            ]
+                        ),
+                        file_name="review_topic_assignments.csv",
+                        mime="text/csv",
+                    )
+
+                with col3:
+                    st.download_button(
+                        label="Pobierz sentyment tematów",
+                        data=convert_dataframe_to_csv(
+                            export_topic_results[
+                                "topic_sentiment_summary"
+                            ]
+                        ),
+                        file_name="topic_sentiment_summary.csv",
+                        mime="text/csv",
+                    )
+
+            except Exception as error:
+                st.warning(
+                    "Nie udało się przygotować eksportu "
+                    f"modelowania tematów: {error}"
+                )
+            
         st.divider()
 
         st.info(
