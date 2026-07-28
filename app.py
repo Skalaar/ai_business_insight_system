@@ -105,6 +105,13 @@ st.subheader("Prototyp systemu wspierającego decyzje przedsiębiorstwa")
 # SAMPLE_REVIEWS_PATH = Path("data/sample/sample_reviews.csv")
 SAMPLE_DATA_PATH = Path("data/sample/generated_sales.csv")
 SAMPLE_REVIEWS_PATH = Path("data/sample/generated_reviews.csv")
+OLIST_SALES_PATH = Path(
+    "data/processed/olist/olist_sales_prepared.csv"
+)
+
+OLIST_REVIEWS_PATH = Path(
+    "data/processed/olist/olist_reviews_prepared.csv"
+)
 
 
 @st.cache_data
@@ -119,6 +126,35 @@ def get_sample_review_data():
     cleaned_data = clean_review_data(raw_data)
     return raw_data, cleaned_data
 
+@st.cache_data(show_spinner=False)
+def get_olist_sales_data():
+    """
+    Wczytuje przygotowane rzeczywiste dane sprzedażowe Olist.
+    """
+    raw_data = load_sales_data(
+        OLIST_SALES_PATH
+    )
+
+    cleaned_data = clean_sales_data(
+        raw_data
+    )
+
+    return raw_data, cleaned_data
+
+@st.cache_data(show_spinner=False)
+def get_olist_review_data():
+    """
+    Wczytuje przygotowane opinie klientów Olist.
+    """
+    raw_data = load_review_data(
+        OLIST_REVIEWS_PATH
+    )
+
+    cleaned_data = clean_review_data(
+        raw_data
+    )
+
+    return raw_data, cleaned_data
 
 def process_uploaded_sales_file(uploaded_file):
     raw_data = load_uploaded_sales_data(uploaded_file)
@@ -280,76 +316,174 @@ def get_data_quality_results(
 
 st.sidebar.header("Źródło danych")
 
-uploaded_sales_file = st.sidebar.file_uploader(
-    "Wgraj plik sprzedażowy CSV/XLSX",
-    type=["csv", "xlsx", "xls"],
+selected_data_source = st.sidebar.radio(
+    "Wybierz zestaw danych",
+    options=[
+        "Olist — dane rzeczywiste",
+        "Dane syntetyczne",
+        "Własne pliki",
+    ],
+    index=0,
+    help=(
+        "Olist jest głównym rzeczywistym zbiorem "
+        "wykorzystywanym w części badawczej."
+    ),
 )
 
-use_sample_sales_data = st.sidebar.checkbox(
-    "Użyj przykładowych danych sprzedażowych",
-    value=True,
-)
+uploaded_sales_file = None
+uploaded_review_file = None
+
+if selected_data_source == "Własne pliki":
+    uploaded_sales_file = st.sidebar.file_uploader(
+        "Wgraj plik sprzedażowy CSV/XLSX",
+        type=["csv", "xlsx", "xls"],
+        key="uploaded_sales_file",
+    )
+
+    uploaded_review_file = st.sidebar.file_uploader(
+        "Wgraj plik z opiniami CSV/XLSX",
+        type=["csv", "xlsx", "xls"],
+        key="uploaded_review_file",
+    )
 
 st.sidebar.divider()
 
-uploaded_review_file = st.sidebar.file_uploader(
-    "Wgraj plik z opiniami CSV/XLSX",
-    type=["csv", "xlsx", "xls"],
-)
-
-use_sample_review_data = st.sidebar.checkbox(
-    "Użyj przykładowych opinii klientów",
-    value=True,
-)
-
 try:
-    if uploaded_sales_file is not None:
-        raw_sales_data, filtered_sales_data = process_uploaded_sales_file(uploaded_sales_file)
-        sales_data_source_description = f"Plik użytkownika: {uploaded_sales_file.name}"
-    elif use_sample_sales_data:
-        raw_sales_data, filtered_sales_data = get_sample_sales_data()
-        # sales_data_source_description = "Dane przykładowe: data/sample/sample_sales.csv"
-        sales_data_source_description = "Dane przykładowe: data/sample/generated_sales.csv"
+    if selected_data_source == "Olist — dane rzeczywiste":
+        with st.spinner(
+            "Trwa wczytywanie rzeczywistych danych Olist..."
+        ):
+            (
+                raw_sales_data,
+                filtered_sales_data,
+            ) = get_olist_sales_data()
+
+        sales_data_source_description = (
+            "Olist — rzeczywiste dane e-commerce: "
+            "data/processed/olist/olist_sales_prepared.csv"
+        )
+
+    elif selected_data_source == "Dane syntetyczne":
+        (
+            raw_sales_data,
+            filtered_sales_data,
+        ) = get_sample_sales_data()
+
+        sales_data_source_description = (
+            "Dane syntetyczne: "
+            "data/sample/generated_sales.csv"
+        )
+
+    elif uploaded_sales_file is not None:
+        (
+            raw_sales_data,
+            filtered_sales_data,
+        ) = process_uploaded_sales_file(
+            uploaded_sales_file
+        )
+
+        sales_data_source_description = (
+            f"Plik użytkownika: "
+            f"{uploaded_sales_file.name}"
+        )
+
     else:
         raw_sales_data = None
         filtered_sales_data = None
-        sales_data_source_description = "Nie wybrano źródła danych sprzedażowych"
+
+        sales_data_source_description = (
+            "Nie wgrano pliku sprzedażowego"
+        )
 
 except Exception as error:
     raw_sales_data = None
     filtered_sales_data = None
-    sales_data_source_description = "Błąd wczytywania danych sprzedażowych"
-    st.sidebar.error(f"Błąd danych sprzedażowych: {error}")
 
+    sales_data_source_description = (
+        "Błąd wczytywania danych sprzedażowych"
+    )
+
+    st.sidebar.error(
+        f"Błąd danych sprzedażowych: {error}"
+    )
 
 try:
-    if uploaded_review_file is not None:
-        raw_review_data, filtered_review_data = process_uploaded_review_file(uploaded_review_file)
-        review_data_source_description = f"Plik użytkownika: {uploaded_review_file.name}"
-    elif use_sample_review_data:
-        raw_review_data, filtered_review_data = get_sample_review_data()
-        # review_data_source_description = "Dane przykładowe: data/sample/sample_reviews.csv"
-        review_data_source_description = "Dane przykładowe: data/sample/generated_reviews.csv"
+    if selected_data_source == "Olist — dane rzeczywiste":
+        with st.spinner(
+            "Trwa wczytywanie opinii klientów Olist..."
+        ):
+            (
+                raw_review_data,
+                filtered_review_data,
+            ) = get_olist_review_data()
+
+        review_data_source_description = (
+            "Olist — rzeczywiste opinie klientów: "
+            "data/processed/olist/olist_reviews_prepared.csv"
+        )
+
+    elif selected_data_source == "Dane syntetyczne":
+        (
+            raw_review_data,
+            filtered_review_data,
+        ) = get_sample_review_data()
+
+        review_data_source_description = (
+            "Dane syntetyczne: "
+            "data/sample/generated_reviews.csv"
+        )
+
+    elif uploaded_review_file is not None:
+        (
+            raw_review_data,
+            filtered_review_data,
+        ) = process_uploaded_review_file(
+            uploaded_review_file
+        )
+
+        review_data_source_description = (
+            f"Plik użytkownika: "
+            f"{uploaded_review_file.name}"
+        )
+
     else:
         raw_review_data = None
         filtered_review_data = None
-        review_data_source_description = "Nie wybrano źródła danych tekstowych"
+
+        review_data_source_description = (
+            "Nie wgrano pliku z opiniami"
+        )
 
 except Exception as error:
     raw_review_data = None
     filtered_review_data = None
-    review_data_source_description = "Błąd wczytywania danych tekstowych"
-    st.sidebar.error(f"Błąd danych tekstowych: {error}")
+
+    review_data_source_description = (
+        "Błąd wczytywania danych tekstowych"
+    )
+
+    st.sidebar.error(
+        f"Błąd danych tekstowych: {error}"
+    )
 
 st.sidebar.divider()
 st.sidebar.header("Filtry analizy")
 
-filtered_sales_data = filtered_sales_data
-filtered_review_data = filtered_review_data
+if (
+    filtered_sales_data is not None
+    and not filtered_sales_data.empty
+):
+    min_date = (
+        filtered_sales_data["InvoiceDate"]
+        .dt.date
+        .min()
+    )
 
-if filtered_sales_data is not None:
-    min_date = filtered_sales_data["InvoiceDate"].dt.date.min()
-    max_date = filtered_sales_data["InvoiceDate"].dt.date.max()
+    max_date = (
+        filtered_sales_data["InvoiceDate"]
+        .dt.date
+        .max()
+    )
 
     selected_date_range = st.sidebar.date_input(
         "Zakres dat sprzedaży",
@@ -358,7 +492,13 @@ if filtered_sales_data is not None:
         max_value=max_date,
     )
 
-    available_countries = sorted(filtered_sales_data["Country"].dropna().unique().tolist())
+    available_countries = sorted(
+        filtered_sales_data["Country"]
+        .dropna()
+        .astype(str)
+        .unique()
+        .tolist()
+    )
 
     selected_countries = st.sidebar.multiselect(
         "Kraje",
@@ -366,32 +506,108 @@ if filtered_sales_data is not None:
         default=[],
     )
 
-    available_products = sorted(filtered_sales_data["Description"].dropna().unique().tolist())
+    selected_categories = []
+
+    if "Category" in filtered_sales_data.columns:
+        available_categories = sorted(
+            filtered_sales_data["Category"]
+            .dropna()
+            .astype(str)
+            .unique()
+            .tolist()
+        )
+
+        selected_categories = st.sidebar.multiselect(
+            "Kategorie produktów",
+            options=available_categories,
+            default=[],
+        )
+
+    product_option_data = filtered_sales_data
+
+    if selected_categories:
+        product_option_data = (
+            product_option_data[
+                product_option_data[
+                    "Category"
+                ].isin(
+                    selected_categories
+                )
+            ]
+        )
+
+    number_of_available_products = int(
+        product_option_data[
+            "Description"
+        ].nunique()
+    )
+
+    if (
+        number_of_available_products > 2000
+        and not selected_categories
+    ):
+        available_products = []
+
+        st.sidebar.caption(
+            "Zbiór zawiera ponad 2000 produktów. "
+            "Wybierz najpierw kategorię, aby włączyć "
+            "filtr konkretnych produktów."
+        )
+
+    else:
+        available_products = sorted(
+            product_option_data[
+                "Description"
+            ]
+            .dropna()
+            .astype(str)
+            .unique()
+            .tolist()
+        )
 
     selected_products = st.sidebar.multiselect(
         "Produkty",
         options=available_products,
         default=[],
+        disabled=not available_products,
     )
 
     filtered_sales_data = filter_sales_data(
         filtered_sales_data,
         date_range=selected_date_range,
         countries=selected_countries,
+        categories=selected_categories,
         products=selected_products,
     )
 
-if filtered_review_data is not None:
-    if filtered_sales_data is not None and not filtered_sales_data.empty:
+if (
+    filtered_review_data is not None
+    and not filtered_review_data.empty
+):
+    if (
+        filtered_sales_data is not None
+        and not filtered_sales_data.empty
+    ):
         selected_review_products = sorted(
-            filtered_sales_data["Description"].dropna().unique().tolist()
+            filtered_sales_data[
+                "Description"
+            ]
+            .dropna()
+            .astype(str)
+            .unique()
+            .tolist()
         )
+
     else:
         selected_review_products = None
 
     selected_sentiments = st.sidebar.multiselect(
         "Sentyment opinii",
-        options=["Pozytywny", "Neutralny", "Negatywny"],
+        options=[
+            "Pozytywny",
+            "Neutralny",
+            "Negatywny",
+        ],
         default=[],
     )
 

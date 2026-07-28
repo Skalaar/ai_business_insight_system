@@ -4,13 +4,165 @@ from collections import Counter
 import pandas as pd
 
 
-STOPWORDS = {
-    "a", "an", "and", "are", "as", "at", "be", "but", "by",
-    "for", "from", "has", "have", "he", "in", "is", "it",
-    "its", "of", "on", "or", "that", "the", "this", "to",
-    "was", "were", "will", "with", "i", "my", "we", "you",
-    "your", "very", "after", "again", "than", "too"
+ENGLISH_STOPWORDS = {
+    "a",
+    "an",
+    "and",
+    "are",
+    "as",
+    "at",
+    "be",
+    "but",
+    "by",
+    "for",
+    "from",
+    "has",
+    "have",
+    "he",
+    "in",
+    "is",
+    "it",
+    "its",
+    "of",
+    "on",
+    "or",
+    "that",
+    "the",
+    "this",
+    "to",
+    "was",
+    "were",
+    "will",
+    "with",
+    "i",
+    "my",
+    "we",
+    "you",
+    "your",
+    "very",
+    "after",
+    "again",
+    "than",
+    "too",
 }
+
+
+PORTUGUESE_STOPWORDS = {
+    "a",
+    "ao",
+    "aos",
+    "aquela",
+    "aquelas",
+    "aquele",
+    "aqueles",
+    "aquilo",
+    "as",
+    "até",
+    "com",
+    "como",
+    "da",
+    "das",
+    "de",
+    "dela",
+    "delas",
+    "dele",
+    "deles",
+    "depois",
+    "do",
+    "dos",
+    "e",
+    "ela",
+    "elas",
+    "ele",
+    "eles",
+    "em",
+    "entre",
+    "era",
+    "eram",
+    "essa",
+    "essas",
+    "esse",
+    "esses",
+    "esta",
+    "estas",
+    "este",
+    "estes",
+    "eu",
+    "foi",
+    "foram",
+    "há",
+    "isso",
+    "isto",
+    "já",
+    "lhe",
+    "lhes",
+    "mais",
+    "mas",
+    "me",
+    "mesma",
+    "mesmo",
+    "meu",
+    "meus",
+    "minha",
+    "minhas",
+    "muito",
+    "muita",
+    "muitos",
+    "muitas",
+    "na",
+    "nas",
+    "não",
+    "nem",
+    "no",
+    "nos",
+    "nós",
+    "nossa",
+    "nosso",
+    "o",
+    "os",
+    "ou",
+    "para",
+    "pela",
+    "pelas",
+    "pelo",
+    "pelos",
+    "por",
+    "porque",
+    "qual",
+    "quando",
+    "que",
+    "quem",
+    "se",
+    "sem",
+    "ser",
+    "seu",
+    "seus",
+    "sua",
+    "suas",
+    "são",
+    "também",
+    "tem",
+    "tinha",
+    "um",
+    "uma",
+    "umas",
+    "uns",
+    "você",
+    "vocês",
+}
+
+
+DOMAIN_STOPWORDS = {
+    "produto",
+    "produtos",
+}
+
+
+STOPWORDS = (
+    ENGLISH_STOPWORDS
+    | PORTUGUESE_STOPWORDS
+    | DOMAIN_STOPWORDS
+)
 
 
 def clean_review_data(data: pd.DataFrame) -> pd.DataFrame:
@@ -127,25 +279,36 @@ def rating_distribution(data: pd.DataFrame) -> pd.DataFrame:
     return result
 
 
-def top_review_words(data: pd.DataFrame, limit: int = 20) -> pd.DataFrame:
+def top_review_words(
+    data: pd.DataFrame,
+    limit: int = 20,
+) -> pd.DataFrame:
     """
-    Zwraca najczęściej występujące słowa w oczyszczonych opiniach.
+    Zwraca najczęściej występujące słowa w opiniach
+    po usunięciu stopwords językowych i dziedzinowych.
     """
     all_words = []
 
-    for text in data["CleanReviewText"]:
+    for text in data["CleanReviewText"].dropna():
         words = [
             word
-            for word in text.split()
-            if len(word) > 2 and word not in STOPWORDS
+            for word in str(text).split()
+            if (
+                len(word) > 2
+                and word not in STOPWORDS
+            )
         ]
+
         all_words.extend(words)
 
     word_counts = Counter(all_words)
 
-    result = pd.DataFrame(
+    return pd.DataFrame(
         word_counts.most_common(limit),
-        columns=["Word", "Count"],
+        columns=[
+            "Word",
+            "Count",
+        ],
     )
 
     return result
