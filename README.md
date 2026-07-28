@@ -28,6 +28,7 @@ Aplikacja obejmuje:
 - zaawansowane centrum wspomagania decyzji,
 - interaktywne filtrowanie wyników,
 - eksport tabel i wyników analiz do plików CSV.
+- automatyczną kontrolę kompletności, poprawności i spójności danych,
 
 ## Technologie
 
@@ -79,8 +80,10 @@ ai_business_insight_system/
 │   ├── recommendations.py
 │   ├── filters.py
 │   └── visualizations.py
+│   ├── data_quality.py
 └── tests/
     ├── conftest.py
+    ├── test_data_quality.py
     ├── test_text_analytics.py
     ├── test_sales_forecasting.py
     ├── test_decision_support.py
@@ -180,6 +183,7 @@ Testy obejmują:
 - prognozowanie sprzedaży,
 - zaawansowane centrum wspomagania decyzji,
 - monitoring stabilności i driftu danych.
+- kontrolę jakości danych i wykrywanie nieprawidłowych rekordów,
 
 Model transformerowy jest testowany osobno w aplikacji, ponieważ jego uruchomienie wymaga pobrania zewnętrznych zasobów i większej mocy obliczeniowej.
 

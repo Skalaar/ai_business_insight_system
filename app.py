@@ -70,6 +70,9 @@ from src.ui_components import (
     render_footer,
     render_sidebar_status,
 )
+from src.data_quality import (
+    build_data_quality_report,
+)
 
 st.set_page_config(
     page_title=APP_NAME,
@@ -263,6 +266,18 @@ def get_drift_monitoring_results(
         top_terms=40,
     )
 
+@st.cache_data(show_spinner=False)
+def get_data_quality_results(
+    sales_data,
+    review_data,
+    minimum_review_length: int,
+):
+    return build_data_quality_report(
+        sales_data=sales_data,
+        review_data=review_data,
+        minimum_review_length=minimum_review_length,
+    )
+
 st.sidebar.header("Źródło danych")
 
 uploaded_sales_file = st.sidebar.file_uploader(
@@ -396,6 +411,7 @@ render_sidebar_status(
 (
     tab_intro,
     tab_data,
+    tab_quality,
     tab_sales,
     tab_forecasting,
     tab_rfm,
@@ -414,6 +430,7 @@ render_sidebar_status(
     [
         "Opis projektu",
         "Dane",
+        "Jakość danych",
         "Analiza sprzedaży",
         "Prognozowanie",
         "Segmentacja RFM",
@@ -497,6 +514,249 @@ with tab_data:
 
         st.metric("Liczba rekordów sprzedażowych po zastosowaniu filtrów", len(filtered_sales_data))
 
+with tab_quality:
+    st.header("Kontrola jakości danych")
+
+    st.write(
+        """
+        Moduł automatycznie ocenia kompletność, poprawność
+        i spójność danych sprzedażowych oraz opinii klientów.
+        Wynik jakości uwzględnia wagę poszczególnych kontroli.
+        """
+    )
+
+    minimum_review_length = st.slider(
+        "Minimalna długość opinii",
+        min_value=5,
+        max_value=50,
+        value=10,
+        step=5,
+    )
+
+    if (
+        filtered_sales_data is None
+        or filtered_sales_data.empty
+        or filtered_review_data is None
+        or filtered_review_data.empty
+    ):
+        st.warning(
+            "Kontrola jakości wymaga danych sprzedażowych "
+            "oraz danych opinii."
+        )
+    else:
+        try:
+            quality_results = (
+                get_data_quality_results(
+                    sales_data=filtered_sales_data,
+                    review_data=filtered_review_data,
+                    minimum_review_length=(
+                        minimum_review_length
+                    ),
+                )
+            )
+
+            quality_summary = quality_results[
+                "summary"
+            ]
+
+            col1, col2, col3, col4 = st.columns(4)
+
+            col1.metric(
+                "Ogólny wynik jakości",
+                (
+                    f"{quality_summary['OverallQualityScore']:.2f}%"
+                ),
+            )
+
+            col2.metric(
+                "Ocena jakości",
+                quality_summary[
+                    "QualityStatus"
+                ],
+            )
+
+            col3.metric(
+                "Kontrole zakończone poprawnie",
+                (
+                    f"{quality_summary['PassedChecks']} "
+                    f"/ {quality_summary['TotalChecks']}"
+                ),
+            )
+
+            col4.metric(
+                "Nieudane kontrole wysokiej wagi",
+                quality_summary[
+                    "HighSeverityFailedChecks"
+                ],
+            )
+
+            col5, col6, col7 = st.columns(3)
+
+            col5.metric(
+                "Rekordy sprzedażowe",
+                quality_summary[
+                    "SalesRecords"
+                ],
+            )
+
+            col6.metric(
+                "Opinie klientów",
+                quality_summary[
+                    "ReviewRecords"
+                ],
+            )
+
+            col7.metric(
+                "Niepowiązane produkty opinii",
+                quality_summary[
+                    "UnmatchedReviewProducts"
+                ],
+            )
+
+            st.divider()
+
+            st.subheader(
+                "Podsumowanie według zbiorów"
+            )
+
+            st.dataframe(
+                quality_results[
+                    "dataset_summary"
+                ].style.format(
+                    {
+                        "AveragePassRate": "{:.2%}",
+                    }
+                ),
+                width="stretch",
+            )
+
+            st.divider()
+
+            st.subheader(
+                "Wyniki wszystkich kontroli"
+            )
+
+            quality_checks = quality_results[
+                "quality_checks"
+            ]
+
+            st.dataframe(
+                quality_checks.style.format(
+                    {
+                        "IssueRate": "{:.2%}",
+                        "PassRate": "{:.2%}",
+                    }
+                ),
+                width="stretch",
+            )
+
+            if (
+                quality_checks["IssueRate"] > 0
+            ).any():
+                quality_chart = px.bar(
+                    quality_checks.sort_values(
+                        by="IssueRate",
+                        ascending=True,
+                    ),
+                    x="IssueRate",
+                    y="Check",
+                    color="Severity",
+                    orientation="h",
+                    title=(
+                        "Odsetek problematycznych rekordów "
+                        "według kontroli"
+                    ),
+                    range_x=[0, 1],
+                )
+
+                st.plotly_chart(
+                    quality_chart,
+                    width="stretch",
+                )
+            else:
+                st.success(
+                    "Wszystkie kontrole zakończyły się powodzeniem. "
+                    "Nie wykryto problemów do przedstawienia na wykresie."
+                )
+
+            st.divider()
+
+            st.subheader(
+                "Problemy wymagające uwagi"
+            )
+
+            if quality_results[
+                "failed_checks"
+            ].empty:
+                st.success(
+                    "Nie wykryto problemów jakościowych."
+                )
+            else:
+                st.dataframe(
+                    quality_results[
+                        "failed_checks"
+                    ].style.format(
+                        {
+                            "IssueRate": "{:.2%}",
+                            "PassRate": "{:.2%}",
+                        }
+                    ),
+                    width="stretch",
+                )
+
+            st.divider()
+
+            st.subheader(
+                "Zalecenia naprawcze"
+            )
+
+            if quality_results[
+                "recommendations"
+            ].empty:
+                st.success(
+                    "Nie są wymagane działania naprawcze."
+                )
+            else:
+                st.dataframe(
+                    quality_results[
+                        "recommendations"
+                    ].style.format(
+                        {
+                            "IssueRate": "{:.2%}",
+                        }
+                    ),
+                    width="stretch",
+                )
+
+            if not quality_results[
+                "unmatched_products"
+            ].empty:
+                st.subheader(
+                    "Produkty opinii nieobecne w sprzedaży"
+                )
+
+                st.dataframe(
+                    quality_results[
+                        "unmatched_products"
+                    ],
+                    width="stretch",
+                )
+
+            st.info(
+                """
+                Wynik jakości jest wskaźnikiem pomocniczym.
+                Każdy problem powinien zostać oceniony
+                z uwzględnieniem znaczenia biznesowego,
+                sposobu pozyskania danych oraz zasad
+                przetwarzania zwrotów i korekt.
+                """
+            )
+
+        except Exception as error:
+            st.error(
+                "Nie udało się przygotować raportu jakości: "
+                f"{error}"
+            )
 
 with tab_sales:
     st.header("Analiza sprzedaży")
@@ -3962,6 +4222,17 @@ with tab_summary:
                 "sentymentu, ocen i słownictwa opinii"
             ),
         },
+        {
+            "Obszar": "Jakość danych",
+            "Metoda": (
+                "Automatyczne reguły kompletności, poprawności "
+                "i spójności oraz ważony wskaźnik jakości"
+            ),
+            "Cel": (
+                "Formalna kontrola danych przed analizą "
+                "i trenowaniem modeli"
+            ),
+        },
     ]
 
     # st.dataframe(methods_data, width="stretch")
@@ -4075,7 +4346,6 @@ with tab_summary:
         i wskazuje obszary wymagające działań biznesowych.
         """
     )
-
 
 with tab_export:
     st.header("Eksport wyników analizy")
@@ -4579,6 +4849,61 @@ with tab_export:
                     "Nie udało się przygotować eksportu driftu: "
                     f"{error}"
                 )
+
+        st.subheader("Kontrola jakości danych")
+
+        try:
+            export_quality_results = (
+                get_data_quality_results(
+                    sales_data=filtered_sales_data,
+                    review_data=filtered_review_data,
+                    minimum_review_length=10,
+                )
+            )
+
+            col1, col2, col3 = st.columns(3)
+
+            with col1:
+                st.download_button(
+                    label="Pobierz raport jakości",
+                    data=convert_dataframe_to_csv(
+                        export_quality_results[
+                            "quality_checks"
+                        ]
+                    ),
+                    file_name="data_quality_report.csv",
+                    mime="text/csv",
+                )
+
+            with col2:
+                st.download_button(
+                    label="Pobierz wykryte problemy",
+                    data=convert_dataframe_to_csv(
+                        export_quality_results[
+                            "failed_checks"
+                        ]
+                    ),
+                    file_name="data_quality_issues.csv",
+                    mime="text/csv",
+                )
+
+            with col3:
+                st.download_button(
+                    label="Pobierz zalecenia naprawcze",
+                    data=convert_dataframe_to_csv(
+                        export_quality_results[
+                            "recommendations"
+                        ]
+                    ),
+                    file_name="data_quality_recommendations.csv",
+                    mime="text/csv",
+                )
+
+        except Exception as error:
+            st.warning(
+                "Nie udało się przygotować eksportu "
+                f"kontroli jakości: {error}"
+            )
                 
         st.subheader("Model transformerowy BERT")
 
