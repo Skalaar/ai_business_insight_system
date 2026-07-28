@@ -42,3 +42,9 @@ coverage.xml
 logs/
 models/
 *.joblib
+
+# Raw Olist dataset
+data/raw/olist/
+
+# Processed Olist datasets
+data/processed/olist/
