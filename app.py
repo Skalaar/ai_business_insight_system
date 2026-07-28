@@ -3145,7 +3145,7 @@ with tab_decision_center:
                 "OpportunityScore",
             ]
 
-            st.dataframe(
+            product_matrix_display = (
                 product_matrix[
                     matrix_columns
                 ]
@@ -3153,7 +3153,49 @@ with tab_decision_center:
                     by="Revenue",
                     ascending=False,
                 )
-                .style.format(
+                .reset_index(drop=True)
+            )
+
+            selected_matrix_rows = st.selectbox(
+                "Liczba produktów wyświetlanych w tabeli",
+                options=[
+                    100,
+                    500,
+                    1000,
+                    5000,
+                ],
+                index=1,
+                help=(
+                    "Tabela jest ograniczona wyłącznie w interfejsie. "
+                    "Wszystkie produkty nadal są wykorzystywane "
+                    "w obliczeniach centrum decyzji."
+                ),
+                key="decision_matrix_display_rows",
+            )
+
+            displayed_product_matrix = (
+                product_matrix_display
+                .head(selected_matrix_rows)
+            )
+
+            displayed_matrix_count = len(
+                displayed_product_matrix
+            )
+
+            total_matrix_count = len(
+                product_matrix_display
+            )
+
+            st.caption(
+                "Wyświetlono "
+                f"{displayed_matrix_count:,} z "
+                f"{total_matrix_count:,} produktów, "
+                "uporządkowanych malejąco według przychodu."
+                .replace(",", " ")
+            )
+
+            st.dataframe(
+                displayed_product_matrix.style.format(
                     {
                         "Revenue": "{:,.2f}",
                         "RevenueShare": "{:.2%}",
@@ -3166,6 +3208,7 @@ with tab_decision_center:
                     }
                 ),
                 width="stretch",
+                hide_index=True,
             )
 
             st.divider()
@@ -3925,14 +3968,20 @@ with tab_topics:
                     ]
                 )
 
-                topic_sample_count = int(
+                topic_fit_count = int(
+                    topic_results[
+                        "fit_number_of_reviews"
+                    ]
+                )
+
+                topic_assignment_count = int(
                     topic_results[
                         "number_of_reviews"
                     ]
                 )
 
                 topic_sample_share = (
-                    topic_sample_count
+                    topic_fit_count
                     / topic_source_count
                     if topic_source_count > 0
                     else 0.0
@@ -3943,23 +3992,32 @@ with tab_topics:
                     .replace(",", " ")
                 )
 
-                formatted_topic_sample_count = (
-                    f"{topic_sample_count:,}"
+                formatted_topic_fit_count = (
+                    f"{topic_fit_count:,}"
+                    .replace(",", " ")
+                )
+
+                formatted_topic_assignment_count = (
+                    f"{topic_assignment_count:,}"
                     .replace(",", " ")
                 )
 
                 st.info(
-                    "Modelowanie tematów wykonano na "
-                    "reprezentatywnej próbce "
-                    f"**{formatted_topic_sample_count}** spośród "
+                    "Model TF-IDF + NMF dopasowano na "
+                    "reprezentatywnej, stratyfikowanej próbce "
+                    f"**{formatted_topic_fit_count}** spośród "
                     f"**{formatted_topic_source_count}** opinii "
-                    f"({topic_sample_share:.2%})."
+                    f"({topic_sample_share:.2%}). "
+                    "Następnie wytrenowany model wykorzystano "
+                    "do przypisania tematów wszystkim "
+                    f"**{formatted_topic_assignment_count}** "
+                    "poprawnym opiniom."
                 )
 
             col1, col2, col3, col4 = st.columns(4)
 
             col1.metric(
-                "Liczba opinii",
+                "Opinie z przypisanym tematem",
                 topic_results["number_of_reviews"],
             )
 

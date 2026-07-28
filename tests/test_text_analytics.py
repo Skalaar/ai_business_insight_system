@@ -215,21 +215,39 @@ def test_topic_modeling(
         max_samples=60,
     )
 
-    assert results["number_of_topics"] == 3
+    assert results[
+        "number_of_topics"
+    ] == 3
 
-    assert results["source_number_of_reviews"] == len(
-        review_data
-    )
+    assert results[
+        "source_number_of_reviews"
+    ] == len(review_data)
 
-    assert results["number_of_reviews"] == 60
+    assert results[
+        "fit_number_of_reviews"
+    ] == 60
 
-    assert results["sample_limit"] == 60
+    assert results[
+        "number_of_reviews"
+    ] == len(review_data)
 
-    assert results["sampled"] is True
+    assert results[
+        "sample_limit"
+    ] == 60
+
+    assert results[
+        "sampled"
+    ] is True
 
     assert len(
         results["review_assignments"]
-    ) == 60
+    ) == len(review_data)
+
+    assert results[
+        "review_assignments"
+    ]["ReviewID"].nunique() == len(
+        review_data
+    )
 
     assert len(
         results["topic_overview"]
@@ -247,9 +265,9 @@ def test_topic_modeling(
         "average_topic_dominance"
     ] <= 1
 
-    assert results["text_language"] == (
-        "portuguese"
-    )
+    assert results[
+        "text_language"
+    ] == "portuguese"
 
     vectorizer = results[
         "vectorizer"
@@ -262,23 +280,3 @@ def test_topic_modeling(
     assert "que" in configured_stopwords
     assert "não" not in configured_stopwords
     assert "produto" in configured_stopwords
-
-    assert results[
-        "source_number_of_reviews"
-    ] == len(review_data)
-
-    assert results[
-        "number_of_reviews"
-    ] == 60
-
-    assert results[
-        "sample_limit"
-    ] == 60
-
-    assert results[
-        "sampled"
-    ] is True
-
-    assert len(
-        results["review_assignments"]
-    ) == 60

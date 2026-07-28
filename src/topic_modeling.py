@@ -145,11 +145,16 @@ def build_topic_analysis(
         prepared_topic_data
     )
 
-    topic_data = create_stratified_text_sample(
+    fit_topic_data = create_stratified_text_sample(
         data=prepared_topic_data,
         max_samples=max_samples,
         target_column="RatingSentiment",
         random_state=random_state,
+    )
+
+    sampled = (
+        len(fit_topic_data)
+        < source_number_of_reviews
     )
 
     normalized_language = normalize_language_code(
@@ -171,11 +176,17 @@ def build_topic_analysis(
         sublinear_tf=True,
     )
 
-    document_term_matrix = vectorizer.fit_transform(
-        topic_data["CleanReviewText"]
+    fit_document_term_matrix = (
+        vectorizer.fit_transform(
+            fit_topic_data[
+                "CleanReviewText"
+            ]
+        )
     )
 
-    number_of_features = document_term_matrix.shape[1]
+    number_of_features = (
+        fit_document_term_matrix.shape[1]
+    )
 
     if number_of_features < number_of_topics:
         raise ValueError(
@@ -192,9 +203,41 @@ def build_topic_analysis(
         random_state=random_state,
     )
 
-    document_topic_matrix = topic_model.fit_transform(
-        document_term_matrix
+    fit_document_topic_matrix = (
+        topic_model.fit_transform(
+            fit_document_term_matrix
+        )
     )
+
+    if sampled:
+        assignment_data = (
+            prepared_topic_data
+            .reset_index(drop=True)
+        )
+
+        assignment_document_term_matrix = (
+            vectorizer.transform(
+                assignment_data[
+                    "CleanReviewText"
+                ]
+            )
+        )
+
+        document_topic_matrix = (
+            topic_model.transform(
+                assignment_document_term_matrix
+            )
+        )
+
+    else:
+        assignment_data = (
+            fit_topic_data
+            .reset_index(drop=True)
+        )
+
+        document_topic_matrix = (
+            fit_document_topic_matrix
+        )
 
     feature_names = vectorizer.get_feature_names_out()
 
@@ -281,10 +324,10 @@ def build_topic_analysis(
             "ReviewText",
             "CleanReviewText",
         ]
-        if column in topic_data.columns
+        if column in assignment_data.columns
     ]
 
-    review_assignments = topic_data[
+    review_assignments = assignment_data[
         assignment_columns
     ].copy()
 
@@ -385,14 +428,16 @@ def build_topic_analysis(
         "topic_sentiment_summary": topic_sentiment_summary,
         "product_topic_summary": product_topic_summary,
         "number_of_topics": number_of_topics,
-        "number_of_reviews": len(topic_data),
+        "number_of_reviews": len(
+            assignment_data
+        ),
+        "fit_number_of_reviews": len(
+            fit_topic_data
+        ),
         "source_number_of_reviews": (
             source_number_of_reviews
         ),
-        "sampled": (
-            len(topic_data)
-            < source_number_of_reviews
-        ),
+        "sampled": sampled,
         "sample_limit": max_samples,
         "number_of_features": number_of_features,
         "text_language": normalized_language,
