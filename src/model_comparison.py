@@ -22,6 +22,11 @@ from sklearn.naive_bayes import ComplementNB, MultinomialNB
 from sklearn.pipeline import Pipeline
 from sklearn.svm import LinearSVC
 
+from src.text_resources import (
+    get_stopwords,
+    normalize_language_code,
+)
+
 try:
     # Dostępne w nowszych wersjach scikit-learn.
     from sklearn.model_selection import StratifiedGroupKFold
@@ -29,13 +34,28 @@ except ImportError:
     StratifiedGroupKFold = None
 
 
-def _create_tfidf_pipeline(classifier: Any) -> Pipeline:
+def _create_tfidf_pipeline(
+    classifier: Any,
+    text_language: str | None = "multilingual",
+) -> Pipeline:
     """
-    Tworzy wspólny pipeline przetwarzania tekstu i klasyfikacji.
+    Tworzy wspólny pipeline przetwarzania tekstu
+    i klasyfikacji.
 
-    Każdy model korzysta z takiej samej reprezentacji TF-IDF,
-    dzięki czemu porównanie algorytmów jest bardziej uczciwe.
+    Każdy model korzysta z tej samej reprezentacji
+    TF-IDF oraz tych samych stopwords, dzięki czemu
+    porównanie algorytmów jest uczciwe.
     """
+    normalized_language = normalize_language_code(
+        text_language
+    )
+
+    stopwords = get_stopwords(
+        language=normalized_language,
+        include_domain=True,
+        preserve_negations=True,
+    )
+
     return Pipeline(
         steps=[
             (
@@ -45,7 +65,7 @@ def _create_tfidf_pipeline(classifier: Any) -> Pipeline:
                     ngram_range=(1, 2),
                     min_df=2,
                     max_df=0.98,
-                    stop_words="english",
+                    stop_words=stopwords,
                     sublinear_tf=True,
                 ),
             ),
@@ -172,6 +192,7 @@ def compare_sentiment_models(
     data: pd.DataFrame,
     requested_folds: int = 5,
     random_state: int = 42,
+    text_language: str | None = "multilingual",
 ) -> dict:
     """
     Porównuje kilka modeli klasyfikacji sentymentu.
@@ -185,6 +206,9 @@ def compare_sentiment_models(
     Główną miarą wyboru najlepszego modelu jest macro F1.
     """
     model_data = _prepare_model_data(data)
+    normalized_language = normalize_language_code(
+        text_language
+    )
 
     X = model_data["CleanReviewText"]
     y = model_data["RatingSentiment"]
@@ -206,24 +230,28 @@ def compare_sentiment_models(
                 max_iter=2000,
                 class_weight="balanced",
                 random_state=random_state,
-            )
+            ),
+            text_language=normalized_language,
         ),
         "Linear SVM": _create_tfidf_pipeline(
             LinearSVC(
                 class_weight="balanced",
                 max_iter=5000,
                 random_state=random_state,
-            )
+            ),
+            text_language=normalized_language,
         ),
         "Multinomial Naive Bayes": _create_tfidf_pipeline(
             MultinomialNB(
                 alpha=0.5,
-            )
+            ),
+            text_language=normalized_language,
         ),
         "Complement Naive Bayes": _create_tfidf_pipeline(
             ComplementNB(
                 alpha=0.5,
-            )
+            ),
+            text_language=normalized_language,
         ),
     }
 
@@ -405,5 +433,6 @@ def compare_sentiment_models(
         "number_of_folds": number_of_folds,
         "validation_strategy": validation_strategy,
         "number_of_reviews": len(model_data),
+        "text_language": normalized_language,
         "labels": labels,
     }

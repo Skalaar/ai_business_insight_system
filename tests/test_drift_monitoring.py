@@ -16,6 +16,7 @@ def test_drift_monitoring_analysis(
         review_data=review_data,
         window_weeks=8,
         top_terms=25,
+        text_language="multilingual",
     )
 
     components = results[
@@ -72,3 +73,24 @@ def test_drift_monitoring_analysis(
     assert summary[
         "CurrentReviews"
     ] > 0
+
+    assert results["text_language"] == (
+        "multilingual"
+    )
+
+    vocabulary = results[
+        "vocabulary_comparison"
+    ]
+
+    assert not vocabulary.empty
+
+    for forbidden_term in [
+        "the",
+        "and",
+        "que",
+        "com",
+        "produto",
+    ]:
+        assert forbidden_term not in set(
+            vocabulary["Term"]
+    )

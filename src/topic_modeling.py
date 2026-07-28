@@ -5,6 +5,10 @@ import pandas as pd
 from sklearn.decomposition import NMF
 from sklearn.feature_extraction.text import TfidfVectorizer
 
+from src.text_resources import (
+    get_stopwords,
+    normalize_language_code,
+)
 
 def _prepare_topic_data(
     data: pd.DataFrame,
@@ -103,6 +107,7 @@ def build_topic_analysis(
     number_of_topics: int = 5,
     top_terms_per_topic: int = 10,
     random_state: int = 42,
+    text_language: str | None = "multilingual",
 ) -> dict:
     """
     Wykonuje modelowanie tematów za pomocą TF-IDF i NMF.
@@ -121,12 +126,22 @@ def build_topic_analysis(
 
     topic_data = _prepare_topic_data(data)
 
+    normalized_language = normalize_language_code(
+        text_language
+    )
+
+    stopwords = get_stopwords(
+        language=normalized_language,
+        include_domain=True,
+        preserve_negations=True,
+    )
+
     vectorizer = TfidfVectorizer(
         max_features=5000,
         ngram_range=(1, 2),
         min_df=2,
         max_df=0.95,
-        stop_words="english",
+        stop_words=stopwords,
         sublinear_tf=True,
     )
 
@@ -346,6 +361,7 @@ def build_topic_analysis(
         "number_of_topics": number_of_topics,
         "number_of_reviews": len(topic_data),
         "number_of_features": number_of_features,
+        "text_language": normalized_language,
         "reconstruction_error": float(
             topic_model.reconstruction_err_
         ),

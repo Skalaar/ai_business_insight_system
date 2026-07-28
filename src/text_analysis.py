@@ -1,171 +1,25 @@
+from __future__ import annotations
+
 import re
+import unicodedata
 from collections import Counter
 
 import pandas as pd
 
-
-ENGLISH_STOPWORDS = {
-    "a",
-    "an",
-    "and",
-    "are",
-    "as",
-    "at",
-    "be",
-    "but",
-    "by",
-    "for",
-    "from",
-    "has",
-    "have",
-    "he",
-    "in",
-    "is",
-    "it",
-    "its",
-    "of",
-    "on",
-    "or",
-    "that",
-    "the",
-    "this",
-    "to",
-    "was",
-    "were",
-    "will",
-    "with",
-    "i",
-    "my",
-    "we",
-    "you",
-    "your",
-    "very",
-    "after",
-    "again",
-    "than",
-    "too",
-}
+from src.text_resources import get_stopwords
 
 
-PORTUGUESE_STOPWORDS = {
-    "a",
-    "ao",
-    "aos",
-    "aquela",
-    "aquelas",
-    "aquele",
-    "aqueles",
-    "aquilo",
-    "as",
-    "até",
-    "com",
-    "como",
-    "da",
-    "das",
-    "de",
-    "dela",
-    "delas",
-    "dele",
-    "deles",
-    "depois",
-    "do",
-    "dos",
-    "e",
-    "ela",
-    "elas",
-    "ele",
-    "eles",
-    "em",
-    "entre",
-    "era",
-    "eram",
-    "essa",
-    "essas",
-    "esse",
-    "esses",
-    "esta",
-    "estas",
-    "este",
-    "estes",
-    "eu",
-    "foi",
-    "foram",
-    "há",
-    "isso",
-    "isto",
-    "já",
-    "lhe",
-    "lhes",
-    "mais",
-    "mas",
-    "me",
-    "mesma",
-    "mesmo",
-    "meu",
-    "meus",
-    "minha",
-    "minhas",
-    "muito",
-    "muita",
-    "muitos",
-    "muitas",
-    "na",
-    "nas",
-    "não",
-    "nem",
-    "no",
-    "nos",
-    "nós",
-    "nossa",
-    "nosso",
-    "o",
-    "os",
-    "ou",
-    "para",
-    "pela",
-    "pelas",
-    "pelo",
-    "pelos",
-    "por",
-    "porque",
-    "qual",
-    "quando",
-    "que",
-    "quem",
-    "se",
-    "sem",
-    "ser",
-    "seu",
-    "seus",
-    "sua",
-    "suas",
-    "são",
-    "também",
-    "tem",
-    "tinha",
-    "um",
-    "uma",
-    "umas",
-    "uns",
-    "você",
-    "vocês",
-}
-
-
-DOMAIN_STOPWORDS = {
-    "produto",
-    "produtos",
-}
-
-
-STOPWORDS = (
-    ENGLISH_STOPWORDS
-    | PORTUGUESE_STOPWORDS
-    | DOMAIN_STOPWORDS
+TEXT_STOPWORDS = set(
+    get_stopwords(
+        language="multilingual",
+        include_domain=True,
+    )
 )
 
 
-def clean_review_data(data: pd.DataFrame) -> pd.DataFrame:
+def clean_review_data(
+    data: pd.DataFrame,
+) -> pd.DataFrame:
     """
     Czyści dane tekstowe zawierające opinie klientów.
 
@@ -188,95 +42,234 @@ def clean_review_data(data: pd.DataFrame) -> pd.DataFrame:
         "ReviewText",
     ]
 
-    missing_columns = [col for col in required_columns if col not in cleaned.columns]
+    missing_columns = [
+        column
+        for column in required_columns
+        if column not in cleaned.columns
+    ]
+
     if missing_columns:
-        raise ValueError(f"Brakuje wymaganych kolumn opinii: {missing_columns}")
+        raise ValueError(
+            "Brakuje wymaganych kolumn opinii: "
+            f"{missing_columns}"
+        )
 
-    cleaned = cleaned.dropna(subset=["ReviewText", "Rating", "ProductName"])
+    cleaned = cleaned.dropna(
+        subset=[
+            "ReviewText",
+            "Rating",
+            "ProductName",
+        ]
+    )
 
-    cleaned["Rating"] = pd.to_numeric(cleaned["Rating"], errors="coerce")
-    cleaned = cleaned.dropna(subset=["Rating"])
+    cleaned["ReviewText"] = (
+        cleaned["ReviewText"]
+        .astype(str)
+        .str.strip()
+    )
 
-    cleaned = cleaned[(cleaned["Rating"] >= 1) & (cleaned["Rating"] <= 5)]
+    cleaned = cleaned[
+        cleaned["ReviewText"].ne("")
+    ].copy()
 
-    cleaned["ReviewDate"] = pd.to_datetime(cleaned["ReviewDate"], errors="coerce")
+    cleaned["Rating"] = pd.to_numeric(
+        cleaned["Rating"],
+        errors="coerce",
+    )
 
-    cleaned["ReviewText"] = cleaned["ReviewText"].astype(str)
-    cleaned["CleanReviewText"] = cleaned["ReviewText"].apply(normalize_text)
-    cleaned["ReviewLength"] = cleaned["ReviewText"].str.len()
-    cleaned["WordCount"] = cleaned["CleanReviewText"].apply(lambda text: len(text.split()))
+    cleaned = cleaned.dropna(
+        subset=["Rating"]
+    )
 
-    cleaned["RatingSentiment"] = cleaned["Rating"].apply(classify_sentiment_by_rating)
+    cleaned = cleaned[
+        cleaned["Rating"].between(
+            1,
+            5,
+        )
+    ].copy()
 
-    return cleaned
+    cleaned["ReviewDate"] = pd.to_datetime(
+        cleaned["ReviewDate"],
+        errors="coerce",
+    )
+
+    cleaned["CleanReviewText"] = (
+        cleaned["ReviewText"]
+        .apply(normalize_text)
+    )
+
+    cleaned = cleaned[
+        cleaned["CleanReviewText"].ne("")
+    ].copy()
+
+    cleaned["ReviewLength"] = (
+        cleaned["ReviewText"]
+        .str.len()
+    )
+
+    cleaned["WordCount"] = (
+        cleaned["CleanReviewText"]
+        .apply(
+            lambda text: len(
+                text.split()
+            )
+        )
+    )
+
+    cleaned["RatingSentiment"] = (
+        cleaned["Rating"]
+        .apply(
+            classify_sentiment_by_rating
+        )
+    )
+
+    return cleaned.reset_index(
+        drop=True
+    )
 
 
-def normalize_text(text: str) -> str:
+def normalize_text(
+    text: str,
+) -> str:
     """
     Normalizuje tekst opinii:
+
     - zmienia litery na małe,
-    - usuwa znaki specjalne,
+    - zachowuje litery diakrytyczne,
+    - usuwa cyfry i znaki specjalne,
     - usuwa nadmiarowe spacje.
+
+    Funkcja jest zgodna między innymi z tekstami
+    angielskimi i portugalskimi.
     """
-    text = text.lower()
-    text = re.sub(r"[^a-zA-Z\s]", " ", text)
-    text = re.sub(r"\s+", " ", text).strip()
+    normalized = unicodedata.normalize(
+        "NFKC",
+        str(text).lower(),
+    )
 
-    return text
+    normalized = re.sub(
+        r"[^\w\s]",
+        " ",
+        normalized,
+        flags=re.UNICODE,
+    )
+
+    normalized = re.sub(
+        r"[_\d]+",
+        " ",
+        normalized,
+    )
+
+    normalized = re.sub(
+        r"\s+",
+        " ",
+        normalized,
+    ).strip()
+
+    return normalized
 
 
-def classify_sentiment_by_rating(rating: float) -> str:
+def classify_sentiment_by_rating(
+    rating: float,
+) -> str:
     """
-    Klasyfikuje sentyment na podstawie oceny gwiazdkowej.
+    Klasyfikuje sentyment na podstawie oceny
+    gwiazdkowej w zakresie 1–5.
     """
     if rating >= 4:
         return "Pozytywny"
+
     if rating == 3:
         return "Neutralny"
+
     return "Negatywny"
 
 
-def review_kpis(data: pd.DataFrame) -> dict:
+def review_kpis(
+    data: pd.DataFrame,
+) -> dict:
     """
     Oblicza podstawowe wskaźniki dla opinii klientów.
     """
     total_reviews = len(data)
-    average_rating = data["Rating"].mean() if total_reviews > 0 else 0
-    average_review_length = data["ReviewLength"].mean() if total_reviews > 0 else 0
-    unique_products = data["ProductName"].nunique() if total_reviews > 0 else 0
+
+    average_rating = (
+        data["Rating"].mean()
+        if total_reviews > 0
+        else 0
+    )
+
+    average_review_length = (
+        data["ReviewLength"].mean()
+        if total_reviews > 0
+        else 0
+    )
+
+    unique_products = (
+        data["ProductName"].nunique()
+        if total_reviews > 0
+        else 0
+    )
 
     return {
         "total_reviews": total_reviews,
         "average_rating": average_rating,
-        "average_review_length": average_review_length,
+        "average_review_length": (
+            average_review_length
+        ),
         "unique_products": unique_products,
     }
 
 
-def sentiment_distribution(data: pd.DataFrame) -> pd.DataFrame:
+def sentiment_distribution(
+    data: pd.DataFrame,
+) -> pd.DataFrame:
     """
     Zwraca rozkład sentymentu opinii.
     """
-    result = (
-        data.groupby("RatingSentiment", as_index=False)
-        .agg(Reviews=("ReviewID", "count"))
-        .sort_values("Reviews", ascending=False)
+    return (
+        data
+        .groupby(
+            "RatingSentiment",
+            as_index=False,
+        )
+        .agg(
+            Reviews=(
+                "ReviewID",
+                "count",
+            )
+        )
+        .sort_values(
+            "Reviews",
+            ascending=False,
+        )
+        .reset_index(drop=True)
     )
 
-    return result
 
-
-def rating_distribution(data: pd.DataFrame) -> pd.DataFrame:
+def rating_distribution(
+    data: pd.DataFrame,
+) -> pd.DataFrame:
     """
     Zwraca rozkład ocen gwiazdkowych.
     """
-    result = (
-        data.groupby("Rating", as_index=False)
-        .agg(Reviews=("ReviewID", "count"))
-        .sort_values("Rating")
+    return (
+        data
+        .groupby(
+            "Rating",
+            as_index=False,
+        )
+        .agg(
+            Reviews=(
+                "ReviewID",
+                "count",
+            )
+        )
+        .sort_values(
+            "Rating"
+        )
+        .reset_index(drop=True)
     )
-
-    return result
 
 
 def top_review_words(
@@ -287,52 +280,110 @@ def top_review_words(
     Zwraca najczęściej występujące słowa w opiniach
     po usunięciu stopwords językowych i dziedzinowych.
     """
-    all_words = []
+    all_words: list[str] = []
 
-    for text in data["CleanReviewText"].dropna():
+    for text in data[
+        "CleanReviewText"
+    ].dropna():
         words = [
             word
             for word in str(text).split()
             if (
                 len(word) > 2
-                and word not in STOPWORDS
+                and word
+                not in TEXT_STOPWORDS
             )
         ]
 
-        all_words.extend(words)
+        all_words.extend(
+            words
+        )
 
-    word_counts = Counter(all_words)
+    word_counts = Counter(
+        all_words
+    )
 
     return pd.DataFrame(
-        word_counts.most_common(limit),
+        word_counts.most_common(
+            limit
+        ),
         columns=[
             "Word",
             "Count",
         ],
     )
 
-    return result
 
-
-def product_review_summary(data: pd.DataFrame) -> pd.DataFrame:
+def product_review_summary(
+    data: pd.DataFrame,
+) -> pd.DataFrame:
     """
     Agreguje opinie według produktu.
     """
     result = (
-        data.groupby("ProductName", as_index=False)
+        data
+        .groupby(
+            "ProductName",
+            as_index=False,
+        )
         .agg(
-            Reviews=("ReviewID", "count"),
-            AverageRating=("Rating", "mean"),
-            AverageReviewLength=("ReviewLength", "mean"),
-            PositiveReviews=("RatingSentiment", lambda x: (x == "Pozytywny").sum()),
-            NeutralReviews=("RatingSentiment", lambda x: (x == "Neutralny").sum()),
-            NegativeReviews=("RatingSentiment", lambda x: (x == "Negatywny").sum()),
+            Reviews=(
+                "ReviewID",
+                "count",
+            ),
+            AverageRating=(
+                "Rating",
+                "mean",
+            ),
+            AverageReviewLength=(
+                "ReviewLength",
+                "mean",
+            ),
+            PositiveReviews=(
+                "RatingSentiment",
+                lambda values: (
+                    values
+                    == "Pozytywny"
+                ).sum(),
+            ),
+            NeutralReviews=(
+                "RatingSentiment",
+                lambda values: (
+                    values
+                    == "Neutralny"
+                ).sum(),
+            ),
+            NegativeReviews=(
+                "RatingSentiment",
+                lambda values: (
+                    values
+                    == "Negatywny"
+                ).sum(),
+            ),
         )
     )
 
-    result["NegativeShare"] = result["NegativeReviews"] / result["Reviews"]
-    result["PositiveShare"] = result["PositiveReviews"] / result["Reviews"]
+    result["NegativeShare"] = (
+        result["NegativeReviews"]
+        / result["Reviews"]
+    )
 
-    result = result.sort_values(["AverageRating", "Reviews"], ascending=[False, False])
+    result["PositiveShare"] = (
+        result["PositiveReviews"]
+        / result["Reviews"]
+    )
 
-    return result
+    return (
+        result
+        .sort_values(
+            by=[
+                "AverageRating",
+                "Reviews",
+            ],
+            ascending=[
+                False,
+                False,
+            ],
+        )
+        .reset_index(drop=True)
+    )

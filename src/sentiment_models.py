@@ -1,64 +1,160 @@
-import pandas as pd
+from __future__ import annotations
 
+from typing import Any
+
+import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.metrics import (
+    accuracy_score,
+    classification_report,
+    confusion_matrix,
+)
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 
+from src.text_resources import (
+    get_stopwords,
+    normalize_language_code,
+)
 
-def train_tfidf_logistic_regression_model(data: pd.DataFrame) -> dict:
+
+def _prepare_sentiment_data(
+    data: pd.DataFrame,
+) -> pd.DataFrame:
     """
-    Trenuje model klasyfikacji sentymentu opinii klientów.
-
-    Model wykorzystuje:
-    - TF-IDF do reprezentacji tekstu,
-    - Logistic Regression do klasyfikacji sentymentu.
-
-    Etykietą uczącą jest RatingSentiment, czyli sentyment wyznaczony
-    na podstawie oceny gwiazdkowej.
-
-    Zwraca słownik zawierający:
-    - wytrenowany model,
-    - dokładność,
-    - raport klasyfikacji,
-    - macierz pomyłek,
-    - dane testowe z predykcjami.
+    Waliduje i przygotowuje dane do trenowania
+    bazowego modelu sentymentu.
     """
-    required_columns = ["CleanReviewText", "RatingSentiment"]
+    required_columns = [
+        "CleanReviewText",
+        "RatingSentiment",
+    ]
 
-    missing_columns = [col for col in required_columns if col not in data.columns]
+    missing_columns = [
+        column
+        for column in required_columns
+        if column not in data.columns
+    ]
+
     if missing_columns:
-        raise ValueError(f"Brakuje wymaganych kolumn do trenowania modelu: {missing_columns}")
+        raise ValueError(
+            "Brakuje wymaganych kolumn do trenowania modelu: "
+            f"{missing_columns}"
+        )
 
-    model_data = data.dropna(subset=["CleanReviewText", "RatingSentiment"]).copy()
-    model_data = model_data[model_data["CleanReviewText"].str.len() > 0]
+    model_data = data.dropna(
+        subset=required_columns
+    ).copy()
+
+    model_data["CleanReviewText"] = (
+        model_data["CleanReviewText"]
+        .astype(str)
+        .str.strip()
+    )
+
+    model_data = model_data[
+        model_data["CleanReviewText"].str.len() > 0
+    ].copy()
 
     if len(model_data) < 10:
         raise ValueError(
-            "Zbyt mało opinii do trenowania modelu. Wymagane jest co najmniej 10 rekordów."
+            "Zbyt mało opinii do trenowania modelu. "
+            "Wymagane jest co najmniej 10 rekordów."
         )
 
-    class_counts = model_data["RatingSentiment"].value_counts()
-    available_classes = class_counts[class_counts >= 2].index.tolist()
+    class_counts = (
+        model_data["RatingSentiment"]
+        .value_counts()
+    )
 
-    model_data = model_data[model_data["RatingSentiment"].isin(available_classes)]
+    available_classes = (
+        class_counts[
+            class_counts >= 2
+        ]
+        .index
+        .tolist()
+    )
 
-    if model_data["RatingSentiment"].nunique() < 2:
+    model_data = model_data[
+        model_data["RatingSentiment"].isin(
+            available_classes
+        )
+    ].copy()
+
+    if (
+        model_data["RatingSentiment"]
+        .nunique()
+        < 2
+    ):
         raise ValueError(
-            "Do trenowania modelu wymagane są co najmniej dwie klasy sentymentu."
+            "Do trenowania modelu wymagane są "
+            "co najmniej dwie klasy sentymentu."
         )
 
-    X = model_data["CleanReviewText"]
-    y = model_data["RatingSentiment"]
+    return model_data.reset_index(
+        drop=True
+    )
 
-    stratify_values = y if y.value_counts().min() >= 2 else None
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X,
-        y,
+def train_tfidf_logistic_regression_model(
+    data: pd.DataFrame,
+    text_language: str | None = "multilingual",
+    random_state: int = 42,
+) -> dict[str, Any]:
+    """
+    Trenuje bazowy model klasyfikacji sentymentu.
+
+    Model wykorzystuje:
+    - reprezentację tekstu TF-IDF,
+    - Logistic Regression,
+    - stopwords dopasowane do języka danych,
+    - zbalansowane wagi klas.
+
+    Etykietą uczącą jest RatingSentiment,
+    czyli sentyment wyznaczony na podstawie
+    oceny gwiazdkowej.
+    """
+    model_data = _prepare_sentiment_data(
+        data
+    )
+
+    normalized_language = (
+        normalize_language_code(
+            text_language
+        )
+    )
+
+    stopwords = get_stopwords(
+        language=normalized_language,
+        include_domain=True,
+        preserve_negations=True,
+    )
+
+    features = model_data[
+        "CleanReviewText"
+    ]
+
+    labels = model_data[
+        "RatingSentiment"
+    ]
+
+    stratify_values = (
+        labels
+        if labels.value_counts().min() >= 2
+        else None
+    )
+
+    (
+        features_train,
+        features_test,
+        labels_train,
+        labels_test,
+    ) = train_test_split(
+        features,
+        labels,
         test_size=0.3,
-        random_state=42,
+        random_state=random_state,
         stratify=stratify_values,
     )
 
@@ -69,7 +165,7 @@ def train_tfidf_logistic_regression_model(data: pd.DataFrame) -> dict:
                 TfidfVectorizer(
                     max_features=1000,
                     ngram_range=(1, 2),
-                    stop_words="english",
+                    stop_words=stopwords,
                 ),
             ),
             (
@@ -77,101 +173,263 @@ def train_tfidf_logistic_regression_model(data: pd.DataFrame) -> dict:
                 LogisticRegression(
                     max_iter=1000,
                     class_weight="balanced",
+                    random_state=random_state,
                 ),
             ),
         ]
     )
 
-    pipeline.fit(X_train, y_train)
-
-    y_pred = pipeline.predict(X_test)
-
-    accuracy = accuracy_score(y_test, y_pred)
-
-    report_dict = classification_report(
-        y_test,
-        y_pred,
-        output_dict=True,
-        zero_division=0,
+    pipeline.fit(
+        features_train,
+        labels_train,
     )
 
-    labels = sorted(model_data["RatingSentiment"].unique().tolist())
+    predicted_labels = pipeline.predict(
+        features_test
+    )
+
+    accuracy = accuracy_score(
+        labels_test,
+        predicted_labels,
+    )
+
+    report_dictionary = (
+        classification_report(
+            labels_test,
+            predicted_labels,
+            output_dict=True,
+            zero_division=0,
+        )
+    )
+
+    preferred_label_order = [
+        "Negatywny",
+        "Neutralny",
+        "Pozytywny",
+    ]
+
+    available_labels = (
+        model_data["RatingSentiment"]
+        .unique()
+        .tolist()
+    )
+
+    labels_order = [
+        label
+        for label in preferred_label_order
+        if label in available_labels
+    ]
+
+    labels_order.extend(
+        sorted(
+            label
+            for label in available_labels
+            if label not in labels_order
+        )
+    )
 
     confusion = confusion_matrix(
-        y_test,
-        y_pred,
-        labels=labels,
+        y_true=labels_test,
+        y_pred=predicted_labels,
+        labels=labels_order,
     )
 
-    confusion_df = pd.DataFrame(
+    confusion_dataframe = pd.DataFrame(
         confusion,
-        index=[f"Rzeczywiste: {label}" for label in labels],
-        columns=[f"Predykcja: {label}" for label in labels],
+        index=[
+            f"Rzeczywiste: {label}"
+            for label in labels_order
+        ],
+        columns=[
+            f"Predykcja: {label}"
+            for label in labels_order
+        ],
     )
 
-    report_df = pd.DataFrame(report_dict).transpose().reset_index()
-    report_df = report_df.rename(columns={"index": "Class"})
+    report_dataframe = (
+        pd.DataFrame(
+            report_dictionary
+        )
+        .transpose()
+        .reset_index()
+        .rename(
+            columns={
+                "index": "Class",
+            }
+        )
+    )
 
-    predictions_df = pd.DataFrame(
+    predictions_dataframe = pd.DataFrame(
         {
-            "ReviewText": X_test.values,
-            "ActualSentiment": y_test.values,
-            "PredictedSentiment": y_pred,
+            "ReviewText": (
+                features_test.values
+            ),
+            "ActualSentiment": (
+                labels_test.values
+            ),
+            "PredictedSentiment": (
+                predicted_labels
+            ),
         }
     )
 
-    predictions_df["CorrectPrediction"] = (
-        predictions_df["ActualSentiment"] == predictions_df["PredictedSentiment"]
+    predictions_dataframe[
+        "CorrectPrediction"
+    ] = (
+        predictions_dataframe[
+            "ActualSentiment"
+        ]
+        == predictions_dataframe[
+            "PredictedSentiment"
+        ]
     )
+
+    vectorizer = pipeline.named_steps[
+        "tfidf"
+    ]
 
     return {
         "model": pipeline,
-        "accuracy": accuracy,
-        "classification_report": report_df,
-        "confusion_matrix": confusion_df,
-        "predictions": predictions_df,
-        "train_size": len(X_train),
-        "test_size": len(X_test),
-        "classes": labels,
+        "accuracy": float(accuracy),
+        "classification_report": (
+            report_dataframe
+        ),
+        "confusion_matrix": (
+            confusion_dataframe
+        ),
+        "predictions": (
+            predictions_dataframe
+        ),
+        "train_size": len(
+            features_train
+        ),
+        "test_size": len(
+            features_test
+        ),
+        "classes": labels_order,
+        "text_language": (
+            normalized_language
+        ),
+        "number_of_features": len(
+            vectorizer.get_feature_names_out()
+        ),
     }
 
 
-def predict_sentiment_for_reviews(data: pd.DataFrame, model) -> pd.DataFrame:
+def predict_sentiment_for_reviews(
+    data: pd.DataFrame,
+    model: Pipeline,
+) -> pd.DataFrame:
     """
-    Dodaje do danych opinii kolumnę z sentymentem przewidzianym przez model ML.
+    Dodaje do danych opinii sentyment
+    przewidziany przez model ML.
     """
+    if "CleanReviewText" not in data.columns:
+        raise ValueError(
+            "Brakuje kolumny CleanReviewText "
+            "w danych przeznaczonych do predykcji."
+        )
+
     predicted_data = data.copy()
 
-    predicted_data["MLSentiment"] = model.predict(predicted_data["CleanReviewText"])
-
-    predicted_data["SentimentAgreement"] = (
-        predicted_data["RatingSentiment"] == predicted_data["MLSentiment"]
+    predicted_data["MLSentiment"] = (
+        model.predict(
+            predicted_data[
+                "CleanReviewText"
+            ]
+        )
     )
+
+    if "RatingSentiment" in predicted_data.columns:
+        predicted_data[
+            "SentimentAgreement"
+        ] = (
+            predicted_data[
+                "RatingSentiment"
+            ]
+            == predicted_data[
+                "MLSentiment"
+            ]
+        )
 
     return predicted_data
 
 
-def ml_sentiment_distribution(data: pd.DataFrame) -> pd.DataFrame:
+def ml_sentiment_distribution(
+    data: pd.DataFrame,
+) -> pd.DataFrame:
     """
-    Zwraca rozkład sentymentu przewidzianego przez model ML.
+    Zwraca rozkład sentymentu przewidzianego
+    przez model ML.
     """
-    result = (
-        data.groupby("MLSentiment", as_index=False)
-        .agg(Reviews=("ReviewID", "count"))
-        .sort_values("Reviews", ascending=False)
+    if "MLSentiment" not in data.columns:
+        raise ValueError(
+            "Brakuje kolumny MLSentiment."
+        )
+
+    return (
+        data
+        .groupby(
+            "MLSentiment",
+            as_index=False,
+        )
+        .agg(
+            Reviews=(
+                "ReviewID",
+                "count",
+            )
+        )
+        .sort_values(
+            "Reviews",
+            ascending=False,
+        )
+        .reset_index(drop=True)
     )
 
-    return result
 
+def sentiment_comparison_summary(
+    data: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Porównuje sentyment wynikający z oceny
+    gwiazdkowej z sentymentem modelu ML.
+    """
+    required_columns = [
+        "RatingSentiment",
+        "MLSentiment",
+    ]
 
-def sentiment_comparison_summary(data: pd.DataFrame) -> pd.DataFrame:
-    """
-    Porównuje sentyment wynikający z oceny gwiazdkowej z sentymentem modelu ML.
-    """
-    result = (
-        data.groupby(["RatingSentiment", "MLSentiment"], as_index=False)
-        .agg(Reviews=("ReviewID", "count"))
-        .sort_values("Reviews", ascending=False)
+    missing_columns = [
+        column
+        for column in required_columns
+        if column not in data.columns
+    ]
+
+    if missing_columns:
+        raise ValueError(
+            "Brakuje kolumn wymaganych do "
+            "porównania sentymentu: "
+            f"{missing_columns}"
+        )
+
+    return (
+        data
+        .groupby(
+            [
+                "RatingSentiment",
+                "MLSentiment",
+            ],
+            as_index=False,
+        )
+        .agg(
+            Reviews=(
+                "ReviewID",
+                "count",
+            )
+        )
+        .sort_values(
+            "Reviews",
+            ascending=False,
+        )
+        .reset_index(drop=True)
     )
-
-    return result

@@ -21,6 +21,7 @@ def test_sentiment_model_comparison(
         data=review_data,
         requested_folds=3,
         random_state=42,
+        text_language="pt-br",
     )
 
     comparison_table = results[
@@ -62,6 +63,24 @@ def test_sentiment_model_comparison(
         results["predictions"]
     ) == len(review_data)
 
+    assert results["text_language"] == (
+        "portuguese"
+    )
+
+    vectorizer = results[
+        "best_model"
+    ].named_steps[
+        "tfidf"
+    ]
+
+    configured_stopwords = set(
+        vectorizer.stop_words
+    )
+
+    assert "que" in configured_stopwords
+    assert "não" not in configured_stopwords
+    assert "produto" in configured_stopwords
+
 
 def test_interpretability_analysis(
     review_data: pd.DataFrame,
@@ -69,6 +88,8 @@ def test_interpretability_analysis(
     results = build_interpretability_analysis(
         data=review_data,
         top_n=10,
+        text_language="pt-br",
+        random_state=42,
     )
 
     assert results["number_of_reviews"] == len(
@@ -107,6 +128,24 @@ def test_interpretability_analysis(
         "probabilities"
     ].empty
 
+    assert results["text_language"] == (
+        "portuguese"
+    )
+
+    vectorizer = results[
+        "model"
+    ].named_steps[
+        "tfidf"
+    ]
+
+    configured_stopwords = set(
+        vectorizer.stop_words
+    )
+
+    assert "que" in configured_stopwords
+    assert "não" not in configured_stopwords
+    assert "produto" in configured_stopwords
+
 
 def test_topic_modeling(
     review_data: pd.DataFrame,
@@ -116,6 +155,7 @@ def test_topic_modeling(
         number_of_topics=3,
         top_terms_per_topic=6,
         random_state=42,
+        text_language="pt-br",
     )
 
     assert results["number_of_topics"] == 3
@@ -143,3 +183,19 @@ def test_topic_modeling(
     assert 0 <= results[
         "average_topic_dominance"
     ] <= 1
+
+    assert results["text_language"] == (
+        "portuguese"
+    )
+
+    vectorizer = results[
+        "vectorizer"
+    ]
+
+    configured_stopwords = set(
+        vectorizer.stop_words
+    )
+
+    assert "que" in configured_stopwords
+    assert "não" not in configured_stopwords
+    assert "produto" in configured_stopwords

@@ -6,6 +6,11 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 
+from src.text_resources import (
+    get_stopwords,
+    normalize_language_code,
+)
+
 
 def _prepare_interpretability_data(
     data: pd.DataFrame,
@@ -72,12 +77,25 @@ def _prepare_interpretability_data(
 def train_interpretable_sentiment_model(
     data: pd.DataFrame,
     random_state: int = 42,
+    text_language: str | None = "multilingual",
 ) -> Pipeline:
     """
-    Trenuje interpretowalny model TF-IDF + Logistic Regression.
-
+    Trenuje interpretowalny model
+    TF-IDF + Logistic Regression.
     """
-    model_data = _prepare_interpretability_data(data)
+    model_data = _prepare_interpretability_data(
+        data
+    )
+
+    normalized_language = normalize_language_code(
+        text_language
+    )
+
+    stopwords = get_stopwords(
+        language=normalized_language,
+        include_domain=True,
+        preserve_negations=True,
+    )
 
     model = Pipeline(
         steps=[
@@ -88,7 +106,7 @@ def train_interpretable_sentiment_model(
                     ngram_range=(1, 2),
                     min_df=2,
                     max_df=0.98,
-                    stop_words="english",
+                    stop_words=stopwords,
                     sublinear_tf=True,
                 ),
             ),
@@ -144,9 +162,6 @@ def extract_global_feature_importance(
     """
     Wyodrębnia słowa i frazy o największym wpływie globalnym.
 
-    Zwraca:
-    - cechy wspierające poszczególne klasy,
-    - cechy działające przeciw poszczególnym klasom.
     """
     vectorizer = model.named_steps["tfidf"]
     classifier = model.named_steps["classifier"]
@@ -226,8 +241,6 @@ def explain_single_review(
     """
     Wyjaśnia pojedynczą predykcję modelu Logistic Regression.
 
-    Wpływ terminu jest obliczany jako:
-    wartość TF-IDF × współczynnik modelu.
     """
     review_text = str(review_text).strip()
 
@@ -339,15 +352,25 @@ def explain_single_review(
 def build_interpretability_analysis(
     data: pd.DataFrame,
     top_n: int = 20,
+    text_language: str | None = "multilingual",
+    random_state: int = 42,
 ) -> dict:
     """
     Trenuje model interpretowalny i przygotowuje
     globalne wyniki jego interpretacji.
     """
-    model_data = _prepare_interpretability_data(data)
+    model_data = _prepare_interpretability_data(
+        data
+    )
+
+    normalized_language = normalize_language_code(
+        text_language
+    )
 
     model = train_interpretable_sentiment_model(
-        model_data
+        data=model_data,
+        random_state=random_state,
+        text_language=normalized_language,
     )
 
     feature_importance = (
@@ -374,4 +397,5 @@ def build_interpretability_analysis(
                 "tfidf"
             ].get_feature_names_out()
         ),
+        "text_language": normalized_language,
     }

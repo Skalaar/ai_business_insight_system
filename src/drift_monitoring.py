@@ -2,10 +2,15 @@ from __future__ import annotations
 
 from collections import Counter
 import re
+import unicodedata
 
 import numpy as np
 import pandas as pd
-from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
+
+from src.text_resources import (
+    get_stopwords,
+    normalize_language_code,
+)
 
 
 def _jensen_shannon_divergence(
@@ -350,20 +355,27 @@ def _build_distribution_comparison(
 
 def _tokenize_text(
     text: str,
+    stopwords: set[str],
 ) -> list[str]:
     """
-    Przekształca tekst na podstawowe tokeny
-    i usuwa angielskie słowa funkcyjne.
+    Przekształca tekst na tokeny z zachowaniem
+    liter diakrytycznych i usuwa wskazane stopwords.
     """
-    tokens = re.findall(
-        r"[a-zA-Z]{3,}",
+    normalized_text = unicodedata.normalize(
+        "NFKC",
         str(text).lower(),
+    )
+
+    tokens = re.findall(
+        r"[^\W\d_]{3,}",
+        normalized_text,
+        flags=re.UNICODE,
     )
 
     return [
         token
         for token in tokens
-        if token not in ENGLISH_STOP_WORDS
+        if token not in stopwords
     ]
 
 
@@ -372,6 +384,7 @@ def _build_vocabulary_comparison(
     current_data: pd.DataFrame,
     text_column: str,
     top_terms: int,
+    stopwords: set[str],
 ) -> pd.DataFrame:
     """
     Porównuje częstość występowania terminów
@@ -385,14 +398,20 @@ def _build_vocabulary_comparison(
         text_column
     ].dropna():
         reference_counter.update(
-            _tokenize_text(text)
+            _tokenize_text(
+                text=text,
+                stopwords=stopwords,
+            )
         )
 
     for text in current_data[
         text_column
     ].dropna():
         current_counter.update(
-            _tokenize_text(text)
+            _tokenize_text(
+                text=text,
+                stopwords=stopwords,
+            )
         )
 
     combined_counter = (
@@ -568,12 +587,26 @@ def build_drift_monitoring_analysis(
     review_data: pd.DataFrame,
     window_weeks: int = 8,
     top_terms: int = 40,
+    text_language: str | None = "multilingual",
 ) -> dict:
     """
     Buduje analizę driftu danych sprzedażowych i tekstowych.
 
     Porównywane są dwa kolejne okresy o tej samej długości.
     """
+
+    normalized_language = normalize_language_code(
+        text_language
+    )
+
+    text_stopwords = set(
+        get_stopwords(
+            language=normalized_language,
+            include_domain=True,
+            preserve_negations=True,
+        )
+    )
+
     required_sales_columns = [
         "InvoiceDate",
         "TotalPrice",
@@ -744,6 +777,7 @@ def build_drift_monitoring_analysis(
             current_data=current_reviews,
             text_column="ReviewText",
             top_terms=top_terms,
+            stopwords=text_stopwords,
         )
     )
 
@@ -1137,4 +1171,5 @@ def build_drift_monitoring_analysis(
         ),
         "sales_windows": sales_windows,
         "review_windows": review_windows,
+        "text_language": normalized_language,
     }
