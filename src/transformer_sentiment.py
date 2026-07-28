@@ -20,10 +20,25 @@ from transformers import (
     AutoModelForSequenceClassification,
     AutoTokenizer,
 )
+from src.text_sampling import (
+    create_stratified_text_sample,
+)
 
 
 DEFAULT_TRANSFORMER_MODEL = (
-    "nlptown/bert-base-multilingual-uncased-sentiment"
+    "tabularisai/multilingual-sentiment-analysis"
+)
+
+TRANSFORMER_MODEL_LICENSE = (
+    "CC BY-NC 4.0"
+)
+
+TRANSFORMER_MODEL_LANGUAGE = (
+    "Wielojęzyczny — obejmuje język portugalski"
+)
+
+TRANSFORMER_MODEL_OUTPUT = (
+    "5 uporządkowanych klas sentymentu"
 )
 
 
@@ -113,40 +128,125 @@ def _star_to_sentiment(
 
     return "Pozytywny"
 
+TEXT_LABEL_TO_STAR = {
+    "very negative": 1,
+    "negative": 2,
+    "neutral": 3,
+    "positive": 4,
+    "very positive": 5,
+}
+
+
+def _convert_model_label_to_star(
+    raw_label: Any,
+    class_index: int,
+) -> int:
+    """
+    Przekształca etykietę modelu transformerowego
+    na uporządkowaną skalę od 1 do 5.
+    """
+    normalized_label = (
+        str(raw_label)
+        .strip()
+        .lower()
+        .replace("_", " ")
+        .replace("-", " ")
+    )
+
+    normalized_label = re.sub(
+        r"\s+",
+        " ",
+        normalized_label,
+    )
+
+    if normalized_label in TEXT_LABEL_TO_STAR:
+        return TEXT_LABEL_TO_STAR[
+            normalized_label
+        ]
+
+    star_match = re.search(
+        r"\b([1-5])\b",
+        normalized_label,
+    )
+
+    if star_match:
+        return int(
+            star_match.group(1)
+        )
+
+    technical_label_match = re.fullmatch(
+        r"label\s*([0-4])",
+        normalized_label,
+    )
+
+    if technical_label_match:
+        return (
+            int(
+                technical_label_match.group(1)
+            )
+            + 1
+        )
+
+    fallback_star = class_index + 1
+
+    if not 1 <= fallback_star <= 5:
+        raise ValueError(
+            "Model transformerowy zwrócił "
+            "nieobsługiwaną liczbę klas."
+        )
+
+    return fallback_star
 
 def _extract_star_labels(
     model: Any,
     number_of_classes: int,
 ) -> list[int]:
     """
-    Odczytuje przypisanie wyjść modelu do liczby gwiazdek.
-
-    W razie braku czytelnych etykiet wykorzystuje kolejność 1–5.
+    Odczytuje uporządkowane przypisanie wyjść modelu
+    do skali od 1 do 5.
     """
+    if number_of_classes != 5:
+        raise ValueError(
+            "Model transformerowy musi zwracać "
+            "dokładnie pięć uporządkowanych klas "
+            "sentymentu."
+        )
+
     star_labels = []
 
-    for class_index in range(number_of_classes):
+    for class_index in range(
+        number_of_classes
+    ):
         raw_label = model.config.id2label.get(
             class_index,
             model.config.id2label.get(
                 str(class_index),
-                str(class_index + 1),
+                f"LABEL_{class_index}",
             ),
         )
 
-        match = re.search(
-            r"\b([1-5])\b",
-            str(raw_label),
+        converted_star = (
+            _convert_model_label_to_star(
+                raw_label=raw_label,
+                class_index=class_index,
+            )
         )
 
-        if match:
-            star_labels.append(
-                int(match.group(1))
-            )
-        else:
-            star_labels.append(
-                class_index + 1
-            )
+        star_labels.append(
+            converted_star
+        )
+
+    if sorted(star_labels) != [
+        1,
+        2,
+        3,
+        4,
+        5,
+    ]:
+        raise ValueError(
+            "Etykiety modelu nie tworzą poprawnej "
+            "uporządkowanej skali od 1 do 5."
+        )
 
     return star_labels
 
@@ -192,6 +292,15 @@ def load_transformer_sentiment_resources(
         "device": device,
         "device_name": device_name,
         "model_name": model_name,
+        "model_license": (
+            TRANSFORMER_MODEL_LICENSE
+        ),
+        "model_language": (
+            TRANSFORMER_MODEL_LANGUAGE
+        ),
+        "model_output": (
+            TRANSFORMER_MODEL_OUTPUT
+        ),
     }
 
 
@@ -200,6 +309,8 @@ def evaluate_transformer_sentiment(
     resources: dict,
     batch_size: int = 16,
     max_length: int = 256,
+    max_samples: int | None = None,
+    random_state: int = 42,
 ) -> dict:
     """
     Przeprowadza predykcję sentymentu i ocenę modelu BERT.
@@ -213,8 +324,28 @@ def evaluate_transformer_sentiment(
             "Rozmiar partii musi być większy od zera."
         )
 
-    model_data = _prepare_transformer_data(
+    if (
+        max_samples is not None
+        and max_samples < 10
+    ):
+        raise ValueError(
+            "Limit próbki dla modelu transformerowego "
+            "musi wynosić co najmniej 10."
+        )
+
+    prepared_model_data = _prepare_transformer_data(
         data
+    )
+
+    source_number_of_reviews = len(
+        prepared_model_data
+    )
+
+    model_data = create_stratified_text_sample(
+        data=prepared_model_data,
+        max_samples=max_samples,
+        target_column="RatingSentiment",
+        random_state=random_state,
     )
 
     tokenizer = resources["tokenizer"]
@@ -636,12 +767,32 @@ def evaluate_transformer_sentiment(
         "model_name": resources[
             "model_name"
         ],
+        "model_license": resources.get(
+            "model_license",
+            "Nie określono",
+        ),
+        "model_language": resources.get(
+            "model_language",
+            "Nie określono",
+        ),
+        "model_output": resources.get(
+            "model_output",
+            "Nie określono",
+        ),
         "device_name": resources[
             "device_name"
         ],
         "number_of_reviews": len(
             predictions
         ),
+        "source_number_of_reviews": (
+            source_number_of_reviews
+        ),
+        "sampled": (
+            len(predictions)
+            < source_number_of_reviews
+        ),
+        "sample_limit": max_samples,
         "runtime_seconds": (
             runtime_seconds
         ),

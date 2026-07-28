@@ -112,7 +112,10 @@ OLIST_SALES_PATH = Path(
 OLIST_REVIEWS_PATH = Path(
     "data/processed/olist/olist_reviews_prepared.csv"
 )
-
+MODEL_COMPARISON_SAMPLE_LIMIT = 10_000
+INTERPRETABILITY_SAMPLE_LIMIT = 10_000
+TOPIC_MODEL_SAMPLE_LIMIT = 15_000
+TRANSFORMER_SAMPLE_LIMIT = 1_000
 
 @st.cache_data
 def get_sample_sales_data():
@@ -176,15 +179,20 @@ def convert_dataframe_to_csv(dataframe):
 def get_model_comparison_results(
     review_data,
     requested_folds: int,
+    max_samples: int = (
+        MODEL_COMPARISON_SAMPLE_LIMIT
+    ),
 ):
     """
-    Uruchamia porównanie modeli i zapisuje wynik w pamięci podręcznej,
-    aby benchmark nie był liczony ponownie przy każdej zmianie widoku.
+    Uruchamia porównanie modeli na kontrolowanej,
+    reprezentatywnej próbce opinii.
     """
     return compare_sentiment_models(
         data=review_data,
         requested_folds=requested_folds,
         random_state=42,
+        text_language="multilingual",
+        max_samples=max_samples,
     )
 
 @st.cache_resource(show_spinner=False)
@@ -199,6 +207,11 @@ def get_interpretability_results(
     return build_interpretability_analysis(
         data=review_data,
         top_n=top_n,
+        text_language="multilingual",
+        random_state=42,
+        max_samples=(
+            INTERPRETABILITY_SAMPLE_LIMIT
+        ),
     )
 
 @st.cache_resource(show_spinner=False)
@@ -208,14 +221,16 @@ def get_topic_analysis_results(
     top_terms_per_topic: int,
 ):
     """
-    Uruchamia modelowanie tematów i przechowuje
-    wynik w pamięci podręcznej Streamlit.
+    Uruchamia modelowanie tematów na kontrolowanej
+    próbce i przechowuje wynik w pamięci podręcznej.
     """
     return build_topic_analysis(
         data=review_data,
         number_of_topics=number_of_topics,
         top_terms_per_topic=top_terms_per_topic,
         random_state=42,
+        text_language="multilingual",
+        max_samples=TOPIC_MODEL_SAMPLE_LIMIT,
     )
 
 @st.cache_data(show_spinner=False)
@@ -273,8 +288,10 @@ def get_transformer_evaluation_results(
     batch_size: int,
 ):
     """
-    Przeprowadza i przechowuje predykcje modelu BERT.
+    Przeprowadza i przechowuje predykcje
+    modelu transformerowego.
     """
+
     resources = get_transformer_resources(
         model_name=model_name,
     )
@@ -284,6 +301,8 @@ def get_transformer_evaluation_results(
         resources=resources,
         batch_size=batch_size,
         max_length=256,
+        max_samples=TRANSFORMER_SAMPLE_LIMIT,
+        random_state=42,
     )
 
 @st.cache_data(show_spinner=False)
@@ -682,7 +701,7 @@ with tab_intro:
         """
         Wersja 3.0-beta obejmuje analizę sprzedaży,
         segmentację klientów RFM, klasyfikację sentymentu,
-        porównanie modeli ML, transformer BERT,
+        porównanie modeli ML, model transformerowy,
         interpretowalność AI, modelowanie tematów,
         prognozowanie sprzedaży, monitoring driftu
         oraz zintegrowane centrum wspomagania decyzji.
@@ -1799,18 +1818,21 @@ with tab_transformer:
 
     st.write(
         """
-        Moduł wykorzystuje gotowy model BERT dostrojony
-        do analizy opinii o produktach. Model przewiduje
-        ocenę od jednej do pięciu gwiazdek, która następnie
-        jest przekształcana na klasę sentymentu.
+        Moduł wykorzystuje wielojęzyczny model DistilBERT,
+        który obejmuje język portugalski. Model przewiduje
+        jedną z pięciu uporządkowanych klas sentymentu:
+        od bardzo negatywnej do bardzo pozytywnej.
+        Klasy są następnie mapowane na skalę od 1 do 5.
         """
     )
 
     st.info(
         """
-        Model nie jest trenowany na aktualnie wczytanym zbiorze.
-        Wykorzystuje wiedzę zdobytą podczas wcześniejszego
-        treningu na zewnętrznych opiniach produktowych.
+        Model nie jest trenowany na danych Olist. Został
+        wcześniej dostrojony na zewnętrznych, syntetycznych
+        danych wielojęzycznych. Wyniki na rzeczywistych
+        portugalskich opiniach Olist stanowią niezależną
+        ocenę jego zdolności generalizacji.
         """
     )
 
@@ -1850,7 +1872,7 @@ with tab_transformer:
         else:
             try:
                 with st.spinner(
-                    "Trwa ładowanie modelu BERT "
+                    "Trwa ładowanie modelu transformerowego "
                     "i analiza opinii..."
                 ):
                     transformer_results = (
@@ -1873,6 +1895,9 @@ with tab_transformer:
                                 filtered_review_data
                             ),
                             requested_folds=5,
+                            max_samples=(
+                                TRANSFORMER_SAMPLE_LIMIT
+                            ),
                         )
                     )
 
@@ -1881,6 +1906,51 @@ with tab_transformer:
                         "metrics"
                     ].iloc[0]
                 )
+
+                transformer_source_count = int(
+                    transformer_results[
+                        "source_number_of_reviews"
+                    ]
+                )
+
+                transformer_sample_count = int(
+                    transformer_results[
+                        "number_of_reviews"
+                    ]
+                )
+
+                transformer_sample_share = (
+                    transformer_sample_count
+                    / transformer_source_count
+                    if transformer_source_count > 0
+                    else 0.0
+                )
+
+                formatted_transformer_source = (
+                    f"{transformer_source_count:,}"
+                    .replace(",", " ")
+                )
+
+                formatted_transformer_sample = (
+                    f"{transformer_sample_count:,}"
+                    .replace(",", " ")
+                )
+
+                if transformer_results["sampled"]:
+                    st.info(
+                        "Analizę transformerową wykonano na "
+                        "reprezentatywnej, stratyfikowanej próbce "
+                        f"**{formatted_transformer_sample}** spośród "
+                        f"**{formatted_transformer_source}** opinii "
+                        f"({transformer_sample_share:.2%}). "
+                        "Do porównania klasycznego wykorzystano "
+                        "ten sam limit liczebności oraz ziarno losowania 42."
+                    )
+                else:
+                    st.success(
+                        "Analizę transformerową wykonano na pełnym "
+                        f"zbiorze **{formatted_transformer_sample}** opinii."
+                    )
 
                 col1, col2, col3, col4 = st.columns(4)
 
@@ -1960,13 +2030,20 @@ with tab_transformer:
 
                 st.caption(
                     "Model: "
-                    f"{transformer_results['model_name']}"
+                    f"{transformer_results['model_name']} | "
+                    "Język: "
+                    f"{transformer_results['model_language']} | "
+                    "Wyjście: "
+                    f"{transformer_results['model_output']} | "
+                    "Licencja: "
+                    f"{transformer_results['model_license']}"
                 )
 
                 st.divider()
 
                 st.subheader(
-                    "Porównanie modelu klasycznego i BERT"
+                    "Porównanie modelu klasycznego "
+                    "i modelu transformerowego"
                 )
 
                 best_classical_row = (
@@ -2003,7 +2080,7 @@ with tab_transformer:
                             ),
                         },
                         {
-                            "Model": "BERT",
+                            "Model": "Multilingual DistilBERT",
                             "ModelType": (
                                 "Transformer"
                             ),
@@ -2034,6 +2111,73 @@ with tab_transformer:
                     ),
                     width="stretch",
                 )
+
+                classical_accuracy = float(
+                    best_classical_row[
+                        "AccuracyMean"
+                    ]
+                )
+
+                classical_f1_macro = float(
+                    best_classical_row[
+                        "F1MacroMean"
+                    ]
+                )
+
+                transformer_accuracy = float(
+                    transformer_metrics[
+                        "SentimentAccuracy"
+                    ]
+                )
+
+                transformer_f1_macro = float(
+                    transformer_metrics[
+                        "F1Macro"
+                    ]
+                )
+
+                accuracy_difference_pp = (
+                    classical_accuracy
+                    - transformer_accuracy
+                ) * 100
+
+                f1_difference_pp = (
+                    classical_f1_macro
+                    - transformer_f1_macro
+                ) * 100
+
+                if (
+                    accuracy_difference_pp > 0
+                    and f1_difference_pp > 0
+                ):
+                    st.warning(
+                        "W zastosowanych procedurach oceny model klasyczny "
+                        f"uzyskał Accuracy wyższe o "
+                        f"**{accuracy_difference_pp:.2f} p.p.** oraz "
+                        f"Macro F1 wyższe o "
+                        f"**{f1_difference_pp:.2f} p.p.** "
+                        "Wynik wskazuje, że model uczony na danych Olist "
+                        "lepiej dopasował się do słownictwa i charakteru "
+                        "analizowanych opinii niż model transformerowy "
+                        "dostrojony wcześniej na danych zewnętrznych."
+                    )
+
+                elif (
+                    accuracy_difference_pp < 0
+                    and f1_difference_pp < 0
+                ):
+                    st.success(
+                        "W zastosowanych procedurach oceny model "
+                        "transformerowy uzyskał wyższe wyniki zarówno "
+                        "dla Accuracy, jak i Macro F1."
+                    )
+
+                else:
+                    st.info(
+                        "Modele uzyskały niejednoznaczne wyniki: "
+                        "jeden z nich osiągnął wyższe Accuracy, "
+                        "natomiast drugi wyższe Macro F1."
+                    )
 
                 comparison_plot_data = (
                     transformer_comparison.melt(
@@ -2071,16 +2215,16 @@ with tab_transformer:
                     """
                     Procedury oceny modeli różnią się. Model klasyczny
                     jest oceniany przez walidację krzyżową na bieżącym
-                    zbiorze, natomiast BERT został wytrenowany wcześniej
-                    na zewnętrznych danych i wykonuje bezpośrednią
-                    predykcję.
+                    zbiorze, natomiast model transformerowy został
+                    wcześniej dostrojony na zewnętrznych danych
+                    i wykonuje bezpośrednią predykcję.
                     """
                 )
 
                 st.divider()
 
                 st.subheader(
-                    "Macierz pomyłek modelu BERT"
+                    "Macierz pomyłek modelu transformerowego"
                 )
 
                 transformer_confusion = (
@@ -2110,6 +2254,91 @@ with tab_transformer:
                 st.dataframe(
                     transformer_confusion,
                     width="stretch",
+                )
+
+                st.subheader(
+                    "Skuteczność rozpoznawania poszczególnych klas"
+                )
+
+                class_diagnostic_rows = []
+
+                for sentiment_label in transformer_results[
+                    "labels"
+                ]:
+                    actual_row_name = (
+                        f"Rzeczywiste: {sentiment_label}"
+                    )
+
+                    predicted_column_name = (
+                        f"Predykcja: {sentiment_label}"
+                    )
+
+                    actual_class_count = int(
+                        transformer_confusion
+                        .loc[
+                            actual_row_name
+                        ]
+                        .sum()
+                    )
+
+                    correct_class_predictions = int(
+                        transformer_confusion.loc[
+                            actual_row_name,
+                            predicted_column_name,
+                        ]
+                    )
+
+                    class_recall = (
+                        correct_class_predictions
+                        / actual_class_count
+                        if actual_class_count > 0
+                        else 0.0
+                    )
+
+                    class_diagnostic_rows.append(
+                        {
+                            "Klasa": sentiment_label,
+                            "Liczba rzeczywistych opinii": (
+                                actual_class_count
+                            ),
+                            "Poprawne predykcje": (
+                                correct_class_predictions
+                            ),
+                            "Recall": class_recall,
+                        }
+                    )
+
+                class_diagnostics = pd.DataFrame(
+                    class_diagnostic_rows
+                )
+
+                st.dataframe(
+                    class_diagnostics.style.format(
+                        {
+                            "Recall": "{:.2%}",
+                        }
+                    ),
+                    width="stretch",
+                )
+
+                weakest_class = (
+                    class_diagnostics
+                    .sort_values(
+                        by="Recall",
+                        ascending=True,
+                    )
+                    .iloc[0]
+                )
+
+                st.warning(
+                    "Najtrudniejszą klasą dla modelu transformerowego "
+                    f"jest **{weakest_class['Klasa']}**. "
+                    "Model poprawnie rozpoznał "
+                    f"**{int(weakest_class['Poprawne predykcje'])}** "
+                    "spośród "
+                    f"**{int(weakest_class['Liczba rzeczywistych opinii'])}** "
+                    "opinii tej klasy, co odpowiada wartości recall "
+                    f"**{weakest_class['Recall']:.2%}**."
                 )
 
                 st.divider()
@@ -2315,6 +2544,29 @@ with tab_interpretability:
                         review_data=filtered_review_data,
                         requested_folds=5,
                     )
+                )
+
+            if interpretability_results["sampled"]:
+                interpretability_source_count = int(
+                    interpretability_results[
+                        "source_number_of_reviews"
+                    ]
+                )
+
+                interpretability_sample_count = int(
+                    interpretability_results[
+                        "number_of_reviews"
+                    ]
+                )
+
+                st.info(
+                    "Model interpretowalny wytrenowano na "
+                    f"reprezentatywnej próbce "
+                    f"**{interpretability_sample_count:,}** "
+                    f"spośród "
+                    f"**{interpretability_source_count:,}** "
+                    "poprawnych opinii."
+                    .replace(",", " ")
                 )
 
             col1, col2, col3, col4 = st.columns(4)
@@ -3666,6 +3918,44 @@ with tab_topics:
                     ),
                 )
 
+            if topic_results["sampled"]:
+                topic_source_count = int(
+                    topic_results[
+                        "source_number_of_reviews"
+                    ]
+                )
+
+                topic_sample_count = int(
+                    topic_results[
+                        "number_of_reviews"
+                    ]
+                )
+
+                topic_sample_share = (
+                    topic_sample_count
+                    / topic_source_count
+                    if topic_source_count > 0
+                    else 0.0
+                )
+
+                formatted_topic_source_count = (
+                    f"{topic_source_count:,}"
+                    .replace(",", " ")
+                )
+
+                formatted_topic_sample_count = (
+                    f"{topic_sample_count:,}"
+                    .replace(",", " ")
+                )
+
+                st.info(
+                    "Modelowanie tematów wykonano na "
+                    "reprezentatywnej próbce "
+                    f"**{formatted_topic_sample_count}** spośród "
+                    f"**{formatted_topic_source_count}** opinii "
+                    f"({topic_sample_share:.2%})."
+                )
+
             col1, col2, col3, col4 = st.columns(4)
 
             col1.metric(
@@ -4018,6 +4308,51 @@ with tab_model_comparison:
 
             best_model_row = comparison_table.iloc[0]
 
+            benchmark_source_reviews = int(
+                benchmark_results[
+                    "source_number_of_reviews"
+                ]
+            )
+
+            benchmark_reviews = int(
+                benchmark_results[
+                    "number_of_reviews"
+                ]
+            )
+
+            benchmark_sample_share = (
+                benchmark_reviews
+                / benchmark_source_reviews
+                if benchmark_source_reviews > 0
+                else 0.0
+            )
+
+            formatted_source_reviews = (
+                f"{benchmark_source_reviews:,}"
+                .replace(",", " ")
+            )
+
+            formatted_benchmark_reviews = (
+                f"{benchmark_reviews:,}"
+                .replace(",", " ")
+            )
+
+            if benchmark_results["sampled"]:
+                st.info(
+                    "Benchmark wykonano na reprezentatywnej, "
+                    "stratyfikowanej próbce "
+                    f"**{formatted_benchmark_reviews}** spośród "
+                    f"**{formatted_source_reviews}** poprawnych opinii "
+                    f"({benchmark_sample_share:.2%}). "
+                    "Próbka zachowuje przybliżone proporcje klas "
+                    "sentymentu i została wybrana deterministycznie."
+                )
+            else:
+                st.success(
+                    "Benchmark wykonano na pełnym zbiorze "
+                    f"**{formatted_benchmark_reviews}** opinii."
+                )
+
             col1, col2, col3, col4 = st.columns(4)
 
             col1.metric(
@@ -4042,8 +4377,49 @@ with tab_model_comparison:
 
             st.caption(
                 "Strategia walidacji: "
-                f"{benchmark_results['validation_strategy']}"
+                f"{benchmark_results['validation_strategy']} | "
+                "Język przetwarzania: "
+                f"{benchmark_results['text_language']} | "
+                "Ziarno losowania: 42"
             )
+
+            sample_col1, sample_col2, sample_col3 = (
+                st.columns(3)
+            )
+
+            sample_col1.metric(
+                "Dostępne opinie",
+                formatted_source_reviews,
+            )
+
+            sample_col2.metric(
+                "Opinie w benchmarku",
+                formatted_benchmark_reviews,
+            )
+
+            sample_col3.metric(
+                "Udział wykorzystanych danych",
+                f"{benchmark_sample_share:.2%}",
+            )
+
+            with st.expander(
+                "Metadane próbki wykorzystanej w benchmarku"
+            ):
+                st.write(
+                    """
+                    Próbkowanie przeprowadzono oddzielnie dla każdej
+                    klasy sentymentu. Pozwala to zachować strukturę
+                    zbioru źródłowego i ograniczyć koszt obliczeniowy
+                    walidacji krzyżowej.
+                    """
+                )
+
+                st.dataframe(
+                    benchmark_results[
+                        "class_distribution"
+                    ],
+                    width="stretch",
+                )
 
             st.divider()
 
@@ -4380,8 +4756,8 @@ with tab_summary:
         {
             "Obszar": "Deep Learning / NLP",
             "Metoda": (
-                "Pretrenowany transformer BERT dostrojony "
-                "do opinii produktowych i ocen 1–5"
+                "Wielojęzyczny model transformerowy dostrojony "
+                "do pięcioklasowej analizy sentymentu"
             ),
             "Cel": (
                 "Porównanie klasycznych metod TF-IDF "
@@ -5121,7 +5497,7 @@ with tab_export:
                 f"kontroli jakości: {error}"
             )
                 
-        st.subheader("Model transformerowy BERT")
+        st.subheader("Model transformerowy")
 
         prepare_transformer_export = st.checkbox(
             "Przygotuj wyniki transformera do eksportu",
@@ -5135,12 +5511,14 @@ with tab_export:
                 or filtered_review_data.empty
             ):
                 st.warning(
-                    "Brak opinii do eksportu wyników BERT."
+                    "Brak opinii do eksportu wyników "
+                    "modelu transformerowego."
                 )
             else:
                 try:
                     with st.spinner(
-                        "Trwa przygotowywanie wyników modelu BERT..."
+                        "Trwa przygotowywanie wyników "
+                        "modelu transformerowego..."
                     ):
                         export_transformer_results = (
                             get_transformer_evaluation_results(
@@ -5158,7 +5536,7 @@ with tab_export:
 
                     with col1:
                         st.download_button(
-                            label="Pobierz metryki BERT",
+                            label="Pobierz metryki modelu transformerowego",
                             data=convert_dataframe_to_csv(
                                 export_transformer_results[
                                     "metrics"
@@ -5172,7 +5550,7 @@ with tab_export:
 
                     with col2:
                         st.download_button(
-                            label="Pobierz predykcje BERT",
+                            label="Pobierz predykcje modelu transformerowego",
                             data=convert_dataframe_to_csv(
                                 export_transformer_results[
                                     "predictions"
@@ -5186,7 +5564,7 @@ with tab_export:
 
                     with col3:
                         st.download_button(
-                            label="Pobierz błędy BERT",
+                            label="Pobierz błędy modelu transformerowego",
                             data=convert_dataframe_to_csv(
                                 export_transformer_results[
                                     "errors"
@@ -5200,7 +5578,7 @@ with tab_export:
 
                 except Exception as error:
                     st.warning(
-                        "Nie udało się przygotować eksportu BERT: "
+                        "Nie udało się przygotować eksportu modelu transformerowego: "
                         f"{error}"
                     )    
           

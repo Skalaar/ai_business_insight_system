@@ -22,6 +22,7 @@ def test_sentiment_model_comparison(
         requested_folds=3,
         random_state=42,
         text_language="pt-br",
+        max_samples=60,
     )
 
     comparison_table = results[
@@ -61,7 +62,7 @@ def test_sentiment_model_comparison(
 
     assert len(
         results["predictions"]
-    ) == len(review_data)
+    ) == results["number_of_reviews"]
 
     assert results["text_language"] == (
         "portuguese"
@@ -81,6 +82,38 @@ def test_sentiment_model_comparison(
     assert "não" not in configured_stopwords
     assert "produto" in configured_stopwords
 
+    assert results[
+        "source_number_of_reviews"
+    ] == len(review_data)
+
+    assert results[
+        "number_of_reviews"
+    ] == 60
+
+    assert results[
+        "sample_limit"
+    ] == 60
+
+    assert results[
+        "sampled"
+    ] is True
+
+    sample_class_counts = (
+        results[
+            "class_distribution"
+        ]
+        .set_index("Sentiment")[
+            "Reviews"
+        ]
+        .to_dict()
+    )
+
+    assert sample_class_counts == {
+        "Pozytywny": 20,
+        "Neutralny": 20,
+        "Negatywny": 20,
+    }
+
 
 def test_interpretability_analysis(
     review_data: pd.DataFrame,
@@ -90,11 +123,18 @@ def test_interpretability_analysis(
         top_n=10,
         text_language="pt-br",
         random_state=42,
+        max_samples=60,
     )
 
-    assert results["number_of_reviews"] == len(
+    assert results["source_number_of_reviews"] == len(
         review_data
     )
+
+    assert results["number_of_reviews"] == 60
+
+    assert results["sample_limit"] == 60
+
+    assert results["sampled"] is True
 
     assert results["number_of_features"] > 0
 
@@ -146,6 +186,22 @@ def test_interpretability_analysis(
     assert "não" not in configured_stopwords
     assert "produto" in configured_stopwords
 
+    assert results[
+        "source_number_of_reviews"
+    ] == len(review_data)
+
+    assert results[
+        "number_of_reviews"
+    ] == 60
+
+    assert results[
+        "sample_limit"
+    ] == 60
+
+    assert results[
+        "sampled"
+    ] is True
+
 
 def test_topic_modeling(
     review_data: pd.DataFrame,
@@ -156,21 +212,28 @@ def test_topic_modeling(
         top_terms_per_topic=6,
         random_state=42,
         text_language="pt-br",
+        max_samples=60,
     )
 
     assert results["number_of_topics"] == 3
 
-    assert results["number_of_reviews"] == len(
+    assert results["source_number_of_reviews"] == len(
         review_data
     )
+
+    assert results["number_of_reviews"] == 60
+
+    assert results["sample_limit"] == 60
+
+    assert results["sampled"] is True
+
+    assert len(
+        results["review_assignments"]
+    ) == 60
 
     assert len(
         results["topic_overview"]
     ) == 3
-
-    assert len(
-        results["review_assignments"]
-    ) == len(review_data)
 
     assert results[
         "review_assignments"
@@ -199,3 +262,23 @@ def test_topic_modeling(
     assert "que" in configured_stopwords
     assert "não" not in configured_stopwords
     assert "produto" in configured_stopwords
+
+    assert results[
+        "source_number_of_reviews"
+    ] == len(review_data)
+
+    assert results[
+        "number_of_reviews"
+    ] == 60
+
+    assert results[
+        "sample_limit"
+    ] == 60
+
+    assert results[
+        "sampled"
+    ] is True
+
+    assert len(
+        results["review_assignments"]
+    ) == 60

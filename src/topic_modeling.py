@@ -9,6 +9,9 @@ from src.text_resources import (
     get_stopwords,
     normalize_language_code,
 )
+from src.text_sampling import (
+    create_stratified_text_sample,
+)
 
 def _prepare_topic_data(
     data: pd.DataFrame,
@@ -108,6 +111,7 @@ def build_topic_analysis(
     top_terms_per_topic: int = 10,
     random_state: int = 42,
     text_language: str | None = "multilingual",
+    max_samples: int | None = None,
 ) -> dict:
     """
     Wykonuje modelowanie tematów za pomocą TF-IDF i NMF.
@@ -124,7 +128,29 @@ def build_topic_analysis(
             "co najmniej 3 najważniejsze terminy."
         )
 
-    topic_data = _prepare_topic_data(data)
+    if (
+        max_samples is not None
+        and max_samples < 30
+    ):
+        raise ValueError(
+            "Limit próbki dla modelowania tematów "
+            "musi wynosić co najmniej 30."
+        )
+
+    prepared_topic_data = _prepare_topic_data(
+        data
+    )
+
+    source_number_of_reviews = len(
+        prepared_topic_data
+    )
+
+    topic_data = create_stratified_text_sample(
+        data=prepared_topic_data,
+        max_samples=max_samples,
+        target_column="RatingSentiment",
+        random_state=random_state,
+    )
 
     normalized_language = normalize_language_code(
         text_language
@@ -360,6 +386,14 @@ def build_topic_analysis(
         "product_topic_summary": product_topic_summary,
         "number_of_topics": number_of_topics,
         "number_of_reviews": len(topic_data),
+        "source_number_of_reviews": (
+            source_number_of_reviews
+        ),
+        "sampled": (
+            len(topic_data)
+            < source_number_of_reviews
+        ),
+        "sample_limit": max_samples,
         "number_of_features": number_of_features,
         "text_language": normalized_language,
         "reconstruction_error": float(

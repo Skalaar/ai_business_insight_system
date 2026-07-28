@@ -26,6 +26,9 @@ from src.text_resources import (
     get_stopwords,
     normalize_language_code,
 )
+from src.text_sampling import (
+    create_stratified_text_sample,
+)
 
 try:
     # Dostępne w nowszych wersjach scikit-learn.
@@ -193,6 +196,7 @@ def compare_sentiment_models(
     requested_folds: int = 5,
     random_state: int = 42,
     text_language: str | None = "multilingual",
+    max_samples: int | None = None,
 ) -> dict:
     """
     Porównuje kilka modeli klasyfikacji sentymentu.
@@ -205,7 +209,30 @@ def compare_sentiment_models(
 
     Główną miarą wyboru najlepszego modelu jest macro F1.
     """
-    model_data = _prepare_model_data(data)
+    if (
+        max_samples is not None
+        and max_samples < 30
+    ):
+        raise ValueError(
+            "Limit próbki dla porównania modeli "
+            "musi wynosić co najmniej 30."
+        )
+
+    prepared_model_data = _prepare_model_data(
+        data
+    )
+
+    source_number_of_reviews = len(
+        prepared_model_data
+    )
+
+    model_data = create_stratified_text_sample(
+        data=prepared_model_data,
+        max_samples=max_samples,
+        target_column="RatingSentiment",
+        random_state=random_state,
+    )
+
     normalized_language = normalize_language_code(
         text_language
     )
@@ -433,6 +460,14 @@ def compare_sentiment_models(
         "number_of_folds": number_of_folds,
         "validation_strategy": validation_strategy,
         "number_of_reviews": len(model_data),
+        "source_number_of_reviews": (
+            source_number_of_reviews
+        ),
+        "sampled": (
+            len(model_data)
+            < source_number_of_reviews
+        ),
+        "sample_limit": max_samples,
         "text_language": normalized_language,
         "labels": labels,
     }
