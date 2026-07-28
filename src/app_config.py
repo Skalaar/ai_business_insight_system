@@ -2,7 +2,7 @@ from __future__ import annotations
 
 
 APP_NAME = "AI Business Insight System"
-APP_VERSION = "3.0.0-beta"
+APP_VERSION = "3.0.0-beta.2"
 
 APP_DESCRIPTION = (
     "Zintegrowany system analizy danych sprzedażowych i opinii klientów "
@@ -18,7 +18,7 @@ APP_MODULES = [
     "Prognozowanie sprzedaży",
     "Klasyfikacja sentymentu",
     "Porównanie modeli ML",
-    "Transformer BERT",
+    "Wielojęzyczny model transformerowy",
     "Interpretowalność AI",
     "Modelowanie tematów",
     "Monitoring driftu",

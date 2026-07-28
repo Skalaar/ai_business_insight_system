@@ -20,7 +20,7 @@ Aplikacja obejmuje:
 - porównanie modeli z zastosowaniem walidacji krzyżowej,
 - analizę interpretowalności modelu,
 - automatyczne wykrywanie tematów opinii metodą NMF,
-- transformerową analizę sentymentu przy użyciu modelu BERT,
+- transformerową analizę sentymentu przy użyciu wielojęzycznego modelu DistilBERT obsługującego język portugalski,
 - prognozowanie sprzedaży z walidacją kroczącą,
 - porównanie modeli prognostycznych,
 - wykrywanie zmian i driftu danych,
@@ -149,10 +149,10 @@ Dane syntetyczne służą do testowania działania aplikacji. Wyniki uzyskane na
 
 ## Model transformerowy
 
-Moduł transformerowy wykorzystuje model:
+Moduł transformerowy wykorzystuje wielojęzyczny model:
 
 ```text
-nlptown/bert-base-multilingual-uncased-sentiment
+tabularisai/multilingual-sentiment-analysis
 ```
 
 Przy pierwszym uruchomieniu model zostanie pobrany z Hugging Face. Wymagane jest wtedy połączenie z Internetem oraz wolne miejsce na dysku.
@@ -184,8 +184,11 @@ Testy obejmują:
 - zaawansowane centrum wspomagania decyzji,
 - monitoring stabilności i driftu danych.
 - kontrolę jakości danych i wykrywanie nieprawidłowych rekordów,
+- deterministyczne próbkowanie stratyfikowane,
+- mapowanie etykiet i ocenę modelu transformerowego,
+- wielojęzyczne zasoby tekstowe i listy stopwords.
 
-Model transformerowy jest testowany osobno w aplikacji, ponieważ jego uruchomienie wymaga pobrania zewnętrznych zasobów i większej mocy obliczeniowej.
+Przygotowanie danych, próbkowanie, mapowanie etykiet oraz generowanie wyników modelu transformerowego są testowane automatycznie z wykorzystaniem modelu zastępczego, bez pobierania zewnętrznych wag. Właściwa inferencja modelu jest dodatkowo weryfikowana w aplikacji na rzeczywistych opiniach Olist.
 
 ## Wersjonowanie
 
@@ -202,6 +205,25 @@ Rozwój zaawansowanej wersji odbywa się na gałęzi:
 ```text
 v3-development
 ```
+
+Aktualny etap rozwojowy został oznaczony jako:
+
+```text
+v3.0.0-beta.2
+```
+
+Wersja beta.2 obejmuje:
+
+- integrację rzeczywistych danych Olist,
+- wielojęzyczne przetwarzanie opinii portugalskich,
+- kontrolowane próbkowanie analiz tekstowych,
+- porównanie klasycznych modeli sentymentu,
+- ocenę wielojęzycznego modelu transformerowego,
+- interpretowalność modelu,
+- modelowanie tematów na próbce z przypisaniem tematów całemu zbiorowi,
+- integrację pełnych wyników tematycznych z centrum wspomagania decyzji,
+- automatyczną kontrolę jakości danych,
+- 20 testów automatycznych.
 
 ## Charakter projektu
 
