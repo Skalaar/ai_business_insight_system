@@ -80,6 +80,132 @@ def inject_global_styles() -> None:
                 font-size: 0.82rem;
                 text-align: center;
             }
+
+            .stApp {
+                background:
+                    linear-gradient(
+                        180deg,
+                        #F8FAFC 0%,
+                        #FFFFFF 24rem
+                    );
+            }
+
+            section[data-testid="stSidebar"] {
+                background:
+                    linear-gradient(
+                        180deg,
+                        #F8FAFC 0%,
+                        #EFF6FF 100%
+                    );
+                border-right:
+                    1px solid rgba(
+                        148,
+                        163,
+                        184,
+                        0.28
+                    );
+            }
+
+            section[data-testid="stSidebar"]
+            div[data-baseweb="select"] > div {
+                min-height: 3rem;
+                border-radius: 12px;
+                border:
+                    1px solid rgba(
+                        37,
+                        99,
+                        235,
+                        0.25
+                    );
+                background: #FFFFFF;
+                box-shadow:
+                    0 4px 12px rgba(
+                        15,
+                        23,
+                        42,
+                        0.05
+                    );
+            }
+
+            div[data-testid="stVerticalBlockBorderWrapper"] {
+                border-radius: 14px;
+                border-color:
+                    rgba(
+                        148,
+                        163,
+                        184,
+                        0.32
+                    );
+                background:
+                    rgba(
+                        255,
+                        255,
+                        255,
+                        0.72
+                    );
+            }
+
+            div[data-testid="stDataFrame"] {
+                overflow: hidden;
+                border-radius: 12px;
+                border:
+                    1px solid rgba(
+                        148,
+                        163,
+                        184,
+                        0.30
+                    );
+            }
+
+            div.stButton > button,
+            div.stDownloadButton > button {
+                min-height: 2.65rem;
+                border-radius: 10px;
+                font-weight: 650;
+                border:
+                    1px solid rgba(
+                        37,
+                        99,
+                        235,
+                        0.24
+                    );
+                box-shadow:
+                    0 3px 10px rgba(
+                        15,
+                        23,
+                        42,
+                        0.05
+                    );
+            }
+
+            div.stButton > button:hover,
+            div.stDownloadButton > button:hover {
+                border-color: #2563EB;
+                transform: translateY(-1px);
+            }
+
+            h1,
+            h2,
+            h3 {
+                letter-spacing: -0.025em;
+            }
+
+            h2 {
+                padding-bottom: 0.35rem;
+                border-bottom:
+                    1px solid rgba(
+                        148,
+                        163,
+                        184,
+                        0.22
+                    );
+            }
+
+            div[data-testid="stExpander"] {
+                border-radius: 12px;
+                overflow: hidden;
+            }
+
         </style>
         """,
         unsafe_allow_html=True,
