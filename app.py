@@ -1144,6 +1144,42 @@ with tab_forecasting:
                     ),
                 )
 
+            removed_start_period = bool(
+                forecast_results[
+                    "removed_incomplete_start_period"
+                ]
+            )
+
+            removed_end_period = bool(
+                forecast_results[
+                    "removed_incomplete_end_period"
+                ]
+            )
+
+            if (
+                removed_start_period
+                or removed_end_period
+            ):
+                removed_period_names = []
+
+                if removed_start_period:
+                    removed_period_names.append(
+                        "pierwszy tydzień"
+                    )
+
+                if removed_end_period:
+                    removed_period_names.append(
+                        "ostatni tydzień"
+                    )
+
+                st.info(
+                    "Przed utworzeniem szeregu prognostycznego "
+                    "pominięto niepełne okresy brzegowe: "
+                    f"**{' i '.join(removed_period_names)}**. "
+                    "Zapobiega to traktowaniu fragmentu tygodnia "
+                    "jako pełnej obserwacji sprzedażowej."
+                )
+
             forecast_metrics = forecast_results[
                 "metrics"
             ]
@@ -1452,15 +1488,25 @@ with tab_forecasting:
                 """
             )
 
-            st.warning(
-                """
-                Obecna prognoza korzysta z syntetycznych danych, których
-                sprzedaż została wygenerowana losowo. Moduł pozwala
-                zweryfikować poprawność całej procedury, ale ostateczna
-                ocena wartości biznesowej prognoz powinna zostać wykonana
-                na rzeczywistym szeregu sprzedażowym.
-                """
-            )
+            if selected_data_source == "Dane syntetyczne":
+                st.warning(
+                    """
+                    Prognoza korzysta z danych syntetycznych, których
+                    sprzedaż została wygenerowana losowo. Wyniki służą
+                    przede wszystkim do weryfikacji poprawności procedury
+                    prognostycznej.
+                    """
+                )
+            else:
+                st.info(
+                    """
+                    Prognoza została wyznaczona na podstawie aktualnie
+                    wybranego źródła danych. Jej interpretacja powinna
+                    uwzględniać długość szeregu, sezonowość, kompletność
+                    końcowych okresów oraz błędy uzyskane w walidacji
+                    kroczącej.
+                    """
+                )
 
         except Exception as error:
             st.error(
@@ -4299,14 +4345,23 @@ with tab_topics:
                     width="stretch",
                 )
 
-            st.warning(
-                """
-                Obecne dane są syntetyczne i korzystają z ograniczonej
-                liczby szablonów opinii. Wykryte tematy służą więc przede
-                wszystkim do przetestowania modułu. Ostateczna interpretacja
-                zostanie wykonana na większym, rzeczywistym zbiorze danych.
-                """
-            )
+            if selected_data_source == "Dane syntetyczne":
+                st.warning(
+                    """
+                    Dane syntetyczne korzystają z ograniczonej liczby
+                    szablonów opinii. Wykryte tematy służą przede wszystkim
+                    do przetestowania działania modułu.
+                    """
+                )
+            else:
+                st.info(
+                    """
+                    Tematy zostały wykryte na podstawie aktualnie wybranego
+                    zbioru opinii. Automatycznie wygenerowane nazwy tematów
+                    wymagają interpretacji analitycznej i nie powinny być
+                    traktowane jako jednoznaczne etykiety biznesowe.
+                    """
+                )
 
         except Exception as error:
             st.error(

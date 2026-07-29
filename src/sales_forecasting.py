@@ -71,6 +71,14 @@ def prepare_weekly_sales_series(
             "nadające się do prognozowania."
         )
 
+    source_start_date = pd.Timestamp(
+        prepared_data["InvoiceDate"].min()
+    )
+
+    source_end_date = pd.Timestamp(
+        prepared_data["InvoiceDate"].max()
+    )
+
     weekly_revenue = (
         prepared_data
         .set_index("InvoiceDate")["TotalPrice"]
@@ -84,6 +92,39 @@ def prepare_weekly_sales_series(
         fill_value=0.0,
     )
 
+    first_period_end = pd.Timestamp(
+        weekly_revenue.index.min()
+    ).normalize()
+
+    last_period_end = pd.Timestamp(
+        weekly_revenue.index.max()
+    ).normalize()
+
+    first_period_start = (
+        first_period_end
+        - pd.Timedelta(days=6)
+    )
+
+    removed_incomplete_start_period = (
+        source_start_date.normalize()
+        > first_period_start
+    )
+
+    removed_incomplete_end_period = (
+        source_end_date.normalize()
+        < last_period_end
+    )
+
+    if removed_incomplete_start_period:
+        weekly_revenue = weekly_revenue.iloc[
+            1:
+        ]
+
+    if removed_incomplete_end_period:
+        weekly_revenue = weekly_revenue.iloc[
+            :-1
+        ]
+
     weekly_data = (
         weekly_revenue
         .rename("Revenue")
@@ -95,10 +136,27 @@ def prepare_weekly_sales_series(
         )
     )
 
+    weekly_data.attrs[
+        "source_start_date"
+    ] = source_start_date
+
+    weekly_data.attrs[
+        "source_end_date"
+    ] = source_end_date
+
+    weekly_data.attrs[
+        "removed_incomplete_start_period"
+    ] = removed_incomplete_start_period
+
+    weekly_data.attrs[
+        "removed_incomplete_end_period"
+    ] = removed_incomplete_end_period
+
     if len(weekly_data) < 16:
         raise ValueError(
-            "Do walidacji prognoz wymagane jest co najmniej "
-            "16 tygodni danych."
+            "Po usunięciu niepełnych tygodni brzegowych "
+            "do walidacji prognoz wymagane jest co najmniej "
+            "16 pełnych tygodni danych."
         )
 
     return weekly_data
@@ -612,6 +670,10 @@ def build_sales_forecast_analysis(
         data
     )
 
+    weekly_data_metadata = dict(
+        weekly_data.attrs
+    )
+
     (
         validation_predictions,
         metrics,
@@ -688,5 +750,27 @@ def build_sales_forecast_analysis(
         "test_size": test_size,
         "test_fraction": test_fraction,
         "forecast_horizon": forecast_horizon,
+        "source_start_date": (
+            weekly_data_metadata.get(
+                "source_start_date"
+            )
+        ),
+        "source_end_date": (
+            weekly_data_metadata.get(
+                "source_end_date"
+            )
+        ),
+        "removed_incomplete_start_period": (
+            weekly_data_metadata.get(
+                "removed_incomplete_start_period",
+                False,
+            )
+        ),
+        "removed_incomplete_end_period": (
+            weekly_data_metadata.get(
+                "removed_incomplete_end_period",
+                False,
+            )
+        ),
         "frequency": "Tygodniowa",
     }

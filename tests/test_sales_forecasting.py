@@ -75,3 +75,61 @@ def test_sales_forecasting_analysis(
     assert (
         metrics["RMSE"] >= 0
     ).all()
+
+def test_incomplete_boundary_weeks_are_removed() -> None:
+    dates = pd.date_range(
+        start="2024-01-03",
+        end="2024-05-29",
+        freq="D",
+    )
+
+    partial_week_data = pd.DataFrame(
+        {
+            "InvoiceDate": dates,
+            "TotalPrice": 100.0,
+        }
+    )
+
+    weekly_data = prepare_weekly_sales_series(
+        partial_week_data
+    )
+
+    assert weekly_data[
+        "PeriodEnd"
+    ].min() == pd.Timestamp(
+        "2024-01-14"
+    )
+
+    assert weekly_data[
+        "PeriodEnd"
+    ].max() == pd.Timestamp(
+        "2024-05-26"
+    )
+
+    assert weekly_data.attrs[
+        "removed_incomplete_start_period"
+    ] is True
+
+    assert weekly_data.attrs[
+        "removed_incomplete_end_period"
+    ] is True
+
+    results = build_sales_forecast_analysis(
+        data=partial_week_data,
+        test_fraction=0.25,
+        forecast_horizon=4,
+    )
+
+    assert results[
+        "removed_incomplete_start_period"
+    ] is True
+
+    assert results[
+        "removed_incomplete_end_period"
+    ] is True
+
+    assert results[
+        "future_forecast"
+    ]["PeriodEnd"].iloc[0] == pd.Timestamp(
+        "2024-06-02"
+    )
