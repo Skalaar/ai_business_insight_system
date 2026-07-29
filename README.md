@@ -195,35 +195,40 @@ Przygotowanie danych, próbkowanie, mapowanie etykiet oraz generowanie wyników 
 Projekt jest rozwijany z wykorzystaniem systemu Git.
 
 Stabilna wersja analityczna została oznaczona tagiem:
-
 ```text
 v2.0
 ```
 
 Rozwój zaawansowanej wersji odbywa się na gałęzi:
-
 ```text
 v3-development
 ```
-
-Aktualny etap rozwojowy został oznaczony jako:
-
+Ostatnia wersja beta została oznaczona tagiem:
 ```text
 v3.0.0-beta.2
 ```
 
-Wersja beta.2 obejmuje:
-
+Aktualny kandydat do wydania został oznaczony jako:
+```text
+v3.0.0-rc.1
+```
+Wersja RC1 obejmuje:
 - integrację rzeczywistych danych Olist,
 - wielojęzyczne przetwarzanie opinii portugalskich,
-- kontrolowane próbkowanie analiz tekstowych,
-- porównanie klasycznych modeli sentymentu,
+- kontrolowane i deterministyczne próbkowanie analiz tekstowych,
+- porównanie klasycznych modeli klasyfikacji sentymentu,
 - ocenę wielojęzycznego modelu transformerowego,
-- interpretowalność modelu,
+- interpretowalność klasyfikacji sentymentu,
 - modelowanie tematów na próbce z przypisaniem tematów całemu zbiorowi,
-- integrację pełnych wyników tematycznych z centrum wspomagania decyzji,
+- integrację tematów, sprzedaży i prognoz w centrum wspomagania decyzji,
+- usuwanie niepełnych okresów brzegowych z tygodniowych danych prognostycznych,
 - automatyczną kontrolę jakości danych,
-- 20 testów automatycznych.
+- monitoring stabilności i driftu danych,
+- leniwe wykonywanie zawartości zakładek,
+- przygotowywanie pełnego pakietu eksportów dopiero na żądanie,
+- usprawniony interfejs i konfigurację środowiska Streamlit,
+- 21 testów automatycznych.
+
 
 ## Charakter projektu
 

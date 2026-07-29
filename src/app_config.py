@@ -2,7 +2,7 @@ from __future__ import annotations
 
 
 APP_NAME = "AI Business Insight System"
-APP_VERSION = "3.0.0-beta.2"
+APP_VERSION = "3.0.0-rc.1"
 
 APP_DESCRIPTION = (
     "Zintegrowany system analizy danych sprzedażowych i opinii klientów "
