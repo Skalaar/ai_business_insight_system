@@ -702,7 +702,7 @@ if tab_intro.open:
 
         st.info(
             """
-            Wersja 3.0-beta obejmuje analizę sprzedaży,
+            Wersja 3.0 obejmuje analizę sprzedaży,
             segmentację klientów RFM, klasyfikację sentymentu,
             porównanie modeli ML, model transformerowy,
             interpretowalność AI, modelowanie tematów,

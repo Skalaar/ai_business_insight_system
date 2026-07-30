@@ -199,20 +199,24 @@ Stabilna wersja analityczna została oznaczona tagiem:
 v2.0
 ```
 
-Rozwój zaawansowanej wersji odbywa się na gałęzi:
+Rozwój zaawansowanej wersji 3.0 odbywał się na gałęzi:
 ```text
 v3-development
 ```
-Ostatnia wersja beta została oznaczona tagiem:
-```text
-v3.0.0-beta.2
-```
 
-Aktualny kandydat do wydania został oznaczony jako:
+W procesie rozwoju utworzono następujące wersje przedpremierowe:
 ```text
+v3.0.0-beta.1
+v3.0.0-beta.2
 v3.0.0-rc.1
 ```
-Wersja RC1 obejmuje:
+
+Aktualna stabilna wersja systemu została oznaczona tagiem:
+```text
+v3.0.0
+```
+
+Wersja v3.0.0 obejmuje:
 - integrację rzeczywistych danych Olist,
 - wielojęzyczne przetwarzanie opinii portugalskich,
 - kontrolowane i deterministyczne próbkowanie analiz tekstowych,
@@ -221,14 +225,17 @@ Wersja RC1 obejmuje:
 - interpretowalność klasyfikacji sentymentu,
 - modelowanie tematów na próbce z przypisaniem tematów całemu zbiorowi,
 - integrację tematów, sprzedaży i prognoz w centrum wspomagania decyzji,
-- usuwanie niepełnych okresów brzegowych z tygodniowych danych prognostycznych,
+- prognozowanie sprzedaży z walidacją kroczącą,
+- usuwanie niepełnych okresów brzegowych z danych tygodniowych,
 - automatyczną kontrolę jakości danych,
 - monitoring stabilności i driftu danych,
+- generowanie rekomendacji biznesowych,
 - leniwe wykonywanie zawartości zakładek,
 - przygotowywanie pełnego pakietu eksportów dopiero na żądanie,
 - usprawniony interfejs i konfigurację środowiska Streamlit,
 - 21 testów automatycznych.
 
+Kod oficjalnej wersji 3.0 jest utrzymywany na gałęzi main.
 
 ## Charakter projektu
 
